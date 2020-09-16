@@ -1,9 +1,5 @@
 use std::sync::Arc;
 
-use cursive::view::{View, ViewWrapper};
-use cursive::views::NamedView;
-use cursive::Cursive;
-
 use crate::album::Album;
 use crate::artist::Artist;
 use crate::command::Command;
@@ -39,28 +35,31 @@ pub trait ListItem: Sync + Send + 'static {
     fn as_listitem(&self) -> Box<dyn ListItem>;
 }
 
+pub trait View {
+}
+
 pub trait ViewExt: View {
     fn title(&self) -> String {
         "".into()
     }
 
-    fn on_command(&mut self, _s: &mut Cursive, _cmd: &Command) -> Result<CommandResult, String> {
+    fn on_command(&mut self,  _cmd: &Command) -> Result<CommandResult, String> {
         Ok(CommandResult::Ignored)
     }
 }
 
-impl<V: ViewExt> ViewExt for NamedView<V> {
-    fn on_command(&mut self, s: &mut Cursive, cmd: &Command) -> Result<CommandResult, String> {
-        self.with_view_mut(move |v| v.on_command(s, cmd)).unwrap()
-    }
-}
+//impl<V: ViewExt> ViewExt for NamedView<V> {
+//    fn on_command(&mut self, cmd: &Command) -> Result<CommandResult, String> {
+//        self.with_view_mut(move |v| v.on_command(cmd)).unwrap()
+//    }
+//}
 
 pub trait IntoBoxedViewExt {
     fn as_boxed_view_ext(self) -> Box<dyn ViewExt>;
 }
 
-impl<V: ViewExt> IntoBoxedViewExt for V {
-    fn as_boxed_view_ext(self) -> Box<dyn ViewExt> {
-        Box::new(self)
-    }
-}
+//impl<V: ViewExt> IntoBoxedViewExt for V {
+//    fn as_boxed_view_ext(self) -> Box<dyn ViewExt> {
+//        Box::new(self)
+//    }
+//}

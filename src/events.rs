@@ -1,5 +1,4 @@
 use crossbeam_channel::{unbounded, Receiver, Sender, TryIter};
-use cursive::{CbSink, Cursive};
 
 use crate::spotify::PlayerEvent;
 
@@ -13,17 +12,15 @@ pub type EventSender = Sender<Event>;
 pub struct EventManager {
     tx: EventSender,
     rx: Receiver<Event>,
-    cursive_sink: CbSink,
 }
 
 impl EventManager {
-    pub fn new(cursive_sink: CbSink) -> EventManager {
+    pub fn new() -> EventManager {
         let (tx, rx) = unbounded();
 
         EventManager {
             tx,
             rx,
-            cursive_sink,
         }
     }
 
@@ -38,8 +35,8 @@ impl EventManager {
 
     pub fn trigger(&self) {
         // send a no-op to trigger event loop processing
-        self.cursive_sink
-            .send(Box::new(Cursive::noop))
-            .expect("could not send no-op event to cursive");
+        //self.cursive_sink
+        //    .send(Box::new(Cursive::noop))
+        //    .expect("could not send no-op event to cursive");
     }
 }

@@ -95,7 +95,7 @@ struct Worker {
     commands: Pin<Box<mpsc::UnboundedReceiver<WorkerCommand>>>,
     session: Session,
     player: Player,
-    play_task: Pin<Box<dyn Future<Output = Result<(), Canceled>>>>,
+    play_task: Pin<Box<dyn Future<Output = Result<(), ()>>>>,
     refresh_task: Pin<Box<dyn Stream<Item = Result<(), tokio_timer::Error>>>>,
     token_task: Pin<Box<dyn Future<Output = Result<(), MercuryError>>>>,
     active: bool,
@@ -149,7 +149,9 @@ impl futures::Future for Worker {
                     WorkerCommand::Load(track) => {
                         if let Some(track_id) = &track.id {
                             let id = SpotifyId::from_base62(track_id).expect("could not parse id");
-                            self.play_task = Box::pin(self.player.load(id, false, 0).compat());
+                            self.player.load(id, false, 0);
+                            self.play_task = Box::pin(self.player.get_end_of_track_future().compat());
+                            //self.play_task = Box::pin(self.player.load(id, false, 0).compat());
                             info!("player loading track: {:?}", track);
                         } else {
                             self.events.send(Event::Player(PlayerEvent::FinishedTrack));
@@ -189,7 +191,7 @@ impl futures::Future for Worker {
                     progress = true;
                     self.events.send(Event::Player(PlayerEvent::FinishedTrack));
                 }
-                Poll::Ready(Err(Canceled)) => {
+                Poll::Ready(Err(_)) => {
                     debug!("player task is over!");
                     self.play_task = Box::pin(futures::future::pending());
                 }
@@ -227,6 +229,7 @@ impl Spotify {
             bitrate: Bitrate::Bitrate320,
             normalisation: false,
             normalisation_pregain: 0.0,
+            gapless: false,
         };
         let (user_tx, user_rx) = oneshot::channel();
         let volume = match &cfg.saved_state {

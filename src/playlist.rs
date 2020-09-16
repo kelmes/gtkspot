@@ -8,7 +8,7 @@ use crate::queue::Queue;
 use crate::spotify::Spotify;
 use crate::track::Track;
 use crate::traits::{IntoBoxedViewExt, ListItem, ViewExt};
-use crate::ui::playlist::PlaylistView;
+// use crate::ui::playlist::PlaylistView;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Playlist {
@@ -176,7 +176,8 @@ impl ListItem for Playlist {
     }
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
-        Some(PlaylistView::new(queue, library, self).as_boxed_view_ext())
+        //Some(PlaylistView::new(queue, library, self).as_boxed_view_ext())
+        None
     }
 
     fn share_url(&self) -> Option<String> {
