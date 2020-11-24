@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gtkspot">
+	<schema id="com.github.kelmes.gtkspot" path="/com/github/kelmes/gtkspot/">
+	</schema>
+</schemalist>

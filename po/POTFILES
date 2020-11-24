@@ -1,0 +1,4 @@
+data/com.github.kelmes.gtkspot.desktop.in
+data/com.github.kelmes.gtkspot.appdata.xml.in
+data/com.github.kelmes.gtkspot.gschema.xml
+src/window.ui
