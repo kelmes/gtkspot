@@ -7,7 +7,7 @@ use configstore::{Configstore, AppUI};
 use std::io::{self, Read};
 use std::path::Path;
 
-pub fn create_credentials() -> Result<RespotCredentials, String> {
+pub fn try_credentials() -> Result<RespotCredentials, String> {
     let config_store = Configstore::new("com.github.kelmes.gtkspot", AppUI::Graphical).unwrap();
 
     // defaults to: `~/.config/configstore-rs/com.github.kelmes.gtkspot/username.json`
@@ -15,25 +15,25 @@ pub fn create_credentials() -> Result<RespotCredentials, String> {
         Ok(x) => x,
         Err(e) => {
             println!("error retrieving username: {}", e);
-            println!("adding new username from stdin");
 
-            let mut input = String::new();
-            match io::stdin().read_line(&mut input) {
-                Ok(n) => {
-                    println!("{} bytes read", n);
-                    println!("{}", input);
-                }
-                Err(error) => println!("error: {}", error),
-            }
-            if input.ends_with("\n") {
-                input.pop();
-            }
-            println!("storing username in configstore");
-            match config_store.set("username", input.clone()) {
-                Ok(x) => x,
-                Err(e) => {println!("error storing username {}", e);}
-            };
-            input
+            //let mut input = String::new();
+            //match io::stdin().read_line(&mut input) {
+            //    Ok(n) => {
+            //        println!("{} bytes read", n);
+            //        println!("{}", input);
+            //    }
+            //    Err(error) => println!("error: {}", error),
+            //}
+            //if input.ends_with("\n") {
+            //    input.pop();
+            //}
+            //println!("storing username in configstore");
+            //match config_store.set("username", input.clone()) {
+            //    Ok(x) => x,
+            //    Err(e) => {println!("error storing username {}", e);}
+            //};
+            //input
+            return(Err("no username found".to_string()));
         },
     };
 
@@ -48,29 +48,77 @@ pub fn create_credentials() -> Result<RespotCredentials, String> {
             println!("error retrieving password: {}", e);
             println!("adding new password from stdin");
 
-            let mut input = String::new();
-            match io::stdin().read_line(&mut input) {
-                Ok(n) => {
-                    println!("{} bytes read", n);
-                    println!("{}", input);
-                }
-                Err(error) => println!("error: {}", error),
-            }
-            if input.ends_with("\n") {
-                input.pop();
-            }
-            println!("storing password in keyring");
-            match keyring.set_password(&input) {
-                Ok(x) => {},
-                Err(x) => {println!("error storing password: {}", x)},
-            };
-            input
+            //let mut input = String::new();
+            //match io::stdin().read_line(&mut input) {
+            //    Ok(n) => {
+            //        println!("{} bytes read", n);
+            //        println!("{}", input);
+            //    }
+            //    Err(error) => println!("error: {}", error),
+            //}
+            //if input.ends_with("\n") {
+            //    input.pop();
+            //}
+            //println!("storing password in keyring");
+            //match keyring.set_password(&input) {
+            //    Ok(x) => {},
+            //    Err(x) => {println!("error storing password: {}", x)},
+            //};
+            //input
+            return(Err("no password found".to_string()));
         }
     };
     println!("The password is '{}'", password);
 
     let username = String::from(username);
     let auth_data = String::from(password).as_bytes().to_vec();
+    Ok(RespotCredentials {
+        username,
+        auth_type: AuthenticationType::AUTHENTICATION_USER_PASS,
+        auth_data,
+    })
+}
+
+pub fn create_credentials(username: String, password: String) -> Result<RespotCredentials, String> {
+    println!("creating credentials");
+    let config_store = Configstore::new("com.github.kelmes.gtkspot", AppUI::Graphical).unwrap();
+
+    let service = "com.github.kelmes.gtkspot";
+
+    let keyring = keyring::Keyring::new(&service, &username);
+
+    let auth_data = password.as_bytes().to_vec();
+
+    // let credentials = match try_credentials() 
+    
+    let username: String = match config_store.get("username") {
+        Ok(x) => x,
+        Err(e) => {
+            println!("error retrieving username: {}", e);
+            println!("storing username in configstore");
+            match config_store.set("username", username.clone()) {
+                Ok(x) => x,
+                Err(e) => {println!("error storing username {}", e);}
+            };
+            username.clone()
+        },
+    };
+
+    let password = match keyring.get_password() {
+        Ok(x) => x,
+        Err(e) => {
+            println!("error retrieving password: {}", e);
+            println!("adding new password from stdin");
+
+            println!("storing password in keyring");
+            match keyring.set_password(&password) {
+                Ok(x) => {},
+                Err(x) => {println!("error storing password: {}", x)},
+            };
+            password
+        }
+    };
+
     Ok(RespotCredentials {
         username,
         auth_type: AuthenticationType::AUTHENTICATION_USER_PASS,

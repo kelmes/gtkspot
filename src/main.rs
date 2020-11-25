@@ -115,6 +115,28 @@ use crate::events::{Event, EventManager};
 use crate::library::Library;
 use crate::spotify::PlayerEvent;
 use crate::track::Track;
+
+use std::cell::Cell;
+
+struct SpotifyThings {
+    event_manager: EventManager,
+    spotify: Arc<spotify::Spotify>,
+    queue: Arc<queue::Queue>,
+    library: Arc<Library>,
+}
+
+struct Init {
+    things: RefCell<Result<SpotifyThings, &'static str>>
+}
+
+impl Init {
+    fn new(creds: Result<Credentials, String>) -> Self {
+        Init {things: RefCell::new(SpotifyThings::new(creds))}
+    }
+    fn re_init(&self, creds: Result<Credentials, String>) {
+        self.things.replace(SpotifyThings::new(creds));
+    }
+}
 //fn main() {}
 
 //#[tokio::main]
@@ -126,63 +148,99 @@ use crate::track::Track;
 //    block_on(search_finished);
 //}
 
-fn get_credentials(reset: bool) -> Credentials {
-    let path = config::config_path("credentials.toml");
-    if reset && fs::remove_file(&path).is_err() {
-        error!("could not delete credential file");
+//fn get_credentials(reset: bool) -> Credentials {
+//    let path = config::config_path("credentials.toml");
+//    if reset && fs::remove_file(&path).is_err() {
+//        error!("could not delete credential file");
+//    }
+//
+//    //let creds = authentication::create_credentials().unwrap();
+//
+//    //let creds = match crate::config::load_or_generate_default(&path, authentication::create_credentials, true) {
+//    //    Ok(x) => x,
+//    //    Err(e) => {
+//    //    },
+//    //};
+//
+//    // #[cfg(target_family = "unix")]
+//    // std::fs::set_permissions(path, std::os::unix::fs::PermissionsExt::from_mode(0o600))
+//    //     .unwrap_or_else(|e| {
+//    //         eprintln!("{}", e);
+//    //         process::exit(1);
+//    //     });
+//
+//    creds
+//}
+
+//trait SpotifyThingsTrait {
+//    fn init(&mut self, credentials: Result<Credentials, String>) -> Result<&'static str, &'static str>;
+//}
+
+impl SpotifyThings {
+    fn new(credentials: Result<Credentials, String>) -> Result<SpotifyThings, &'static str> {
+        let creds = 
+        if credentials.is_err() {
+            return Err("credentials not ok (yet?)");
+        } else {
+            credentials.unwrap()
+        };
+        let cfg: crate::config::Config = {
+            let path = config::config_path("config.toml");
+            crate::config::load_or_generate_default(
+                path,
+                |_| Ok(crate::config::Config::default()),
+                false,
+            )
+            .unwrap_or_else(|e| {
+                eprintln!("{}", e);
+                process::exit(1);
+            })
+        };
+        let event_manager = EventManager::new();
+        let spotify = Arc::new(spotify::Spotify::new(
+            event_manager.clone(),
+            creds.clone(),
+            &cfg
+        ));
+        let queue = Arc::new(queue::Queue::new(spotify.clone()));
+        let library = Arc::new(Library::new(
+            &event_manager,
+            spotify.clone(),
+            cfg.use_nerdfont.unwrap_or(false),
+        ));
+        Ok(SpotifyThings{event_manager, spotify, queue, library})
     }
-
-    let creds = authentication::create_credentials().unwrap();
-
-    //let creds = match crate::config::load_or_generate_default(&path, authentication::create_credentials, true) {
-    //    Ok(x) => x,
-    //    Err(e) => {
-    //    },
-    //};
-
-    // #[cfg(target_family = "unix")]
-    // std::fs::set_permissions(path, std::os::unix::fs::PermissionsExt::from_mode(0o600))
-    //     .unwrap_or_else(|e| {
-    //         eprintln!("{}", e);
-    //         process::exit(1);
-    //     });
-
-    creds
+    //fn init(&mut self, credentials: Result<Credentials, String>) -> Result<&'static str, &'static str> {
+    //    new_set = new();
+    //    self.spotify
+    //}
 }
 
-fn search_track(query: &String) -> Vec<Track> {
+fn search_track(query: &String, things: &SpotifyThings) -> Vec<Track> {
     println!("starting search");
-    let mut credentials = get_credentials(false);
+    let event_manager = &things.event_manager;
+    let spotify = &things.spotify;
+    let queue = &things.queue;
+    let library = &things.library;
+    //let mut credentials = get_credentials(false);
 
 
     // Things here may cause the process to abort; we must do them before creating curses windows
     // otherwise the error message will not be seen by a user
-    let cfg: crate::config::Config = {
-        let path = config::config_path("config.toml");
-        crate::config::load_or_generate_default(
-            path,
-            |_| Ok(crate::config::Config::default()),
-            false,
-        )
-        .unwrap_or_else(|e| {
-            eprintln!("{}", e);
-            process::exit(1);
-        })
-    };
+    //let cfg: crate::config::Config = {
+    //    let path = config::config_path("config.toml");
+    //    crate::config::load_or_generate_default(
+    //        path,
+    //        |_| Ok(crate::config::Config::default()),
+    //        false,
+    //    )
+    //    .unwrap_or_else(|e| {
+    //        eprintln!("{}", e);
+    //        process::exit(1);
+    //    })
+    //};
 
-    let event_manager = EventManager::new();
 
-    let spotify = Arc::new(spotify::Spotify::new(
-        event_manager.clone(),
-        credentials,
-        &cfg,
-    ));
-    let queue = Arc::new(queue::Queue::new(spotify.clone()));
-    let library = Arc::new(Library::new(
-        &event_manager,
-        spotify.clone(),
-        cfg.use_nerdfont.unwrap_or(false),
-    ));
 
 
     let mut found_tracks: Vec<Track> = vec![];
@@ -358,6 +416,16 @@ fn build_ui<'a>(application: &gtk::Application) {
     window.set_application(Some(application));
     let bigbutton: Button = builder.get_object("button1").expect("Couldn't get button1");
 
+    let login_stack: gtk::Stack = builder
+        .get_object("login_stack")
+        .expect("couldn't get login_stack");
+    let login_form: gtk::Grid = builder
+        .get_object("login_form")
+        .expect("couldn't get login_form");
+    let ui_box: gtk::Box = builder
+        .get_object("main_ui")
+        .expect("couldn't get main_ui");
+
     let results_listbox: ListBox = builder
         .get_object("results_listbox")
         .expect("couldn't get results_listbox");
@@ -372,6 +440,7 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("search_box")
         .expect("Couldn't get search_box");
 
+
     {
         let sr2 = sr.clone();
         bigbutton.connect_clicked(move |_| {
@@ -385,17 +454,65 @@ fn build_ui<'a>(application: &gtk::Application) {
             sr2.borrow_mut().set_reveal_child(false);
         });
     }
+
+    let credentials = authentication::try_credentials();
+    let init: Init = Init::new(credentials);
+
+    //if init.things.try_borrow().is_ok() {
+    //    login_stack.set_visible_child(&ui_box);
+    //}
+    
+
+    let login_button: gtk::Button = builder
+        .get_object("login_button")
+        .expect("couldn't get login button");
+
+    let username_entry: gtk::Entry = builder
+        .get_object("username_entry")
+        .expect("Couldn't get username_entry");
+    let password_entry: gtk::Entry = builder
+        .get_object("password_entry")
+        .expect("Couldn't get password_entry");
+
+    login_button.connect_clicked(move |button| {
+        println!("re-trying credentials");
+        let password = String::from(password_entry.get_text());
+        login_stack.set_visible_child(&ui_box);
+
+        //let credentials = authentication::create_credentials(username, password);
+        //init.re_init(credentials);
+    });
+
+
     //search_box.connect_stop_search(|sbox: &SearchEntry| {
     //    search_revealer.set_reveal_child(false);
     //});
     //search_box.connect_stop_search(|sbox| sbox_stop_search(&sbox, &search_revealer));
 
     search_box.connect_activate(move |sbox| {
+        println!("searching");
         let mut listbox_row_builder = gtk::ListBoxRowBuilder::new();
         listbox_row_builder = listbox_row_builder.activatable(true);
         println!("searching...");
         let query = String::from(sbox.get_text().as_str());
-        let results = search_track(&query);
+        let username_entry: gtk::Entry = builder
+            .get_object("username_entry")
+            .expect("Couldn't get username_entry");
+        let password_entry: gtk::Entry = builder
+            .get_object("password_entry")
+            .expect("Couldn't get password_entry");
+        println!("re-trying credentials");
+        let username = String::from(username_entry.get_text());
+        let password = String::from(password_entry.get_text());
+        let credentials = match authentication::try_credentials() {
+            Ok(x) => Ok(x),
+            Err(e) => {
+                authentication::create_credentials(username, password)
+            }
+        };
+        // let credentials = 
+        init.re_init(credentials);
+        let results = search_track(&query, init.things.try_borrow().unwrap().as_ref().unwrap());
         //let search_finished = async {
             for child in results_listbox.get_children() {
               //results_listbox.remove(&child);
@@ -428,6 +545,7 @@ fn sbox_stop_search<'a>(sbox: &'a gtk::SearchEntry, search_revealer: &'a Reveale
     search_revealer.set_reveal_child(false);
 }
 
+// static init: Init = Init { things: RefCell::new(Err("not initialised yet")) };
 fn main() {
     let application = gtk::Application::new(
         Some("com.github.gtk-rs.examples.builder_basics"),
@@ -435,6 +553,8 @@ fn main() {
     )
     .expect("Initialization failed...");
 
+    let credentials = authentication::try_credentials();
+    // init.re_init(credentials);
     application.connect_activate(|app| {
         build_ui(app);
     });
