@@ -118,6 +118,8 @@ pub fn create_credentials(username: String, password: String) -> Result<RespotCr
             password
         }
     };
+    let username = String::from(username);
+    let auth_data = String::from(password).as_bytes().to_vec();
 
     Ok(RespotCredentials {
         username,
