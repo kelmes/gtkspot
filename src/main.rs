@@ -107,6 +107,8 @@ mod track;
 mod traits;
 mod search;
 
+
+
 #[cfg(feature = "mpris")]
 mod mpris;
 
@@ -361,7 +363,7 @@ fn search_track(query: &String, things: &SpotifyThings) -> Vec<Track> {
 //    //    .run(Session::connect(session_config, credentials, None, handle))
 //    //    .unwrap();
 //
-//    //let plist = core.run(Playlist::get(&session, plist_uri)).unwrap();
+//    //let plist = core.run(Playlist::get(&session, plist_uri)).unwrap();>
 //    //println!("{:?}", plist);
 //    //for track_id in plist.tracks {
 //    //    let plist_track = core.run(Track::get(&session, track_id)).unwrap();
@@ -455,14 +457,6 @@ fn build_ui<'a>(application: &gtk::Application) {
         });
     }
 
-    let credentials = authentication::try_credentials();
-    let init: Init = Init::new(credentials);
-
-    //if init.things.try_borrow().is_ok() {
-    //    login_stack.set_visible_child(&ui_box);
-    //}
-    
-
     let login_button: gtk::Button = builder
         .get_object("login_button")
         .expect("couldn't get login button");
@@ -478,10 +472,20 @@ fn build_ui<'a>(application: &gtk::Application) {
         println!("re-trying credentials");
         let password = String::from(password_entry.get_text());
         login_stack.set_visible_child(&ui_box);
-
-        //let credentials = authentication::create_credentials(username, password);
-        //init.re_init(credentials);
     });
+
+
+    let credentials = authentication::try_credentials();
+    if credentials.is_ok() {
+        let init = Init::new(credentials);
+        login_button.emit("clicked", &[]);
+    }
+
+    //if init.things.try_borrow().is_ok() {
+    //    login_stack.set_visible_child(&ui_box);
+    //}
+
+
 
 
     //search_box.connect_stop_search(|sbox: &SearchEntry| {
@@ -511,8 +515,13 @@ fn build_ui<'a>(application: &gtk::Application) {
             }
         };
         // let credentials = 
-        init.re_init(credentials);
-        let results = search_track(&query, init.things.try_borrow().unwrap().as_ref().unwrap());
+        let init = if credentials.is_ok() {
+            Ok(Init::new(credentials))
+        } else {
+            Err("no credentials")
+        };
+        // init.re_init(credentials);
+        let results = search_track(&query, init.unwrap().things.try_borrow().unwrap().as_ref().unwrap());
         //let search_finished = async {
             for child in results_listbox.get_children() {
               //results_listbox.remove(&child);
