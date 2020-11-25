@@ -1,92 +1,93 @@
-use std::path::Path;
+// extern crate secret_service;
+// use secret_service::SecretService;
+// use secret_service::EncryptionType;
+extern crate keyring;
 
-//use cursive::traits::Boxable;
-//use cursive::view::Identifiable;
-//use cursive::views::*;
-//use cursive::{CbSink, Cursive};
 
 use librespot_core::authentication::Credentials as RespotCredentials;
 use librespot_protocol::authentication::AuthenticationType;
 
-pub fn create_credentials(path: &Path) -> Result<RespotCredentials, String> {
-    //let mut login_cursive = Cursive::default();
-    //let info_buf = TextContent::new("Failed to authenticate\n");
-    //info_buf.append(format!(
-    //    "Cannot read config file from {}\n",
-    //    path.to_str().unwrap()
-    //));
-    //let info_view = Dialog::around(TextView::new_with_content(info_buf))
-    //    .button("Login", move |s| {
-    //        let login_view = Dialog::new()
-    //            .title("Spotify login")
-    //            .content(
-    //                ListView::new()
-    //                    .child(
-    //                        "Username",
-    //                        EditView::new().with_name("spotify_user").fixed_width(18),
-    //                    )
-    //                    .child(
-    //                        "Password",
-    //                        EditView::new()
-    //                            .secret()
-    //                            .with_name("spotify_password")
-    //                            .fixed_width(18),
-    //                    ),
-    //            )
-    //            .button("Login", |s| {
-    //                let username = s
-    //                    .call_on_name("spotify_user", |view: &mut EditView| view.get_content())
-    //                    .unwrap()
-    //                    .to_string();
-    //                let auth_data = s
-    //                    .call_on_name("spotify_password", |view: &mut EditView| view.get_content())
-    //                    .unwrap()
-    //                    .to_string()
-    //                    .as_bytes()
-    //                    .to_vec();
-    //                s.set_user_data::<Result<RespotCredentials, String>>(Ok(RespotCredentials {
-    //                    username,
-    //                    auth_type: AuthenticationType::AUTHENTICATION_USER_PASS,
-    //                    auth_data,
-    //                }));
-    //                s.quit();
-    //            })
-    //            .button("Quit", Cursive::quit);
-    //        s.pop_layer();
-    //        s.add_layer(login_view);
-    //    });
-    //    //.button("Login with Facebook", |s| {
-    //    //    let urls: std::collections::HashMap<String, String> =
-    //    //        reqwest::get("https://login2.spotify.com/v1/config")
-    //    //            .expect("didn't connect")
-    //    //            .json()
-    //    //            .expect("didn't parse");
-    //    //    // not a dialog to let people copy & paste the URL
-    //    //    let url_notice = TextView::new(format!("Browse to {}", &urls["login_url"]));
+use std::io::{self, Read};
 
-    //    //    let controls = Button::new("Quit", Cursive::quit);
+pub fn create_credentials() -> Result<RespotCredentials, String> {
+    // initialize secret service (dbus connection and encryption session)
+    // let ss = SecretService::new(EncryptionType::Dh).unwrap();
 
-    //    //    let login_view = LinearLayout::new(cursive::direction::Orientation::Vertical)
-    //    //        .child(url_notice)
-    //    //        .child(controls);
-    //    //    let url = &urls["login_url"];
-    //    //    webbrowser::open(url).ok();
-    //    //    auth_poller(&urls["credentials_url"], &s.cb_sink());
-    //    //    s.pop_layer();
-    //    //    s.add_layer(login_view)
-    //    //})
-    //    //.button("Quit", Cursive::quit);
+    // get default collection
+    // let collection = ss.get_default_collection().unwrap();
 
-    //login_cursive.add_layer(info_view);
-    //login_cursive.run();
 
-    //login_cursive
-    //    .user_data()
-    //    .cloned()
-    //    .unwrap_or_else(|| Err("Didn't obtain any credentials".to_string()));
-    
-    let username = String::from("username");
-    let auth_data = String::from("password").as_bytes().to_vec();
+
+    // search items by properties
+    // let mut search_items = ss.search_items(
+    //     vec![("spotify_user", "atheris84")]
+    // ).unwrap();
+
+
+    // println!("found {} secrets", search_items.len());
+
+    // if search_items.len() == 0 {
+        //create new item
+    //     collection.create_item(
+    //         "gtkspot", // label
+    //         vec![("spotify_user", "atheris84")], // properties
+    //         b"st0rmS#@", //secret
+    //         true, // replace item with same attributes
+    //         "text/plain" // secret content type
+    //     ).unwrap();
+    //     search_items = ss.search_items(
+    //         vec![("spotify_user", "atheris84")]
+    //     ).unwrap();
+    // }
+
+    // let item = search_items.get(0).unwrap();
+
+    // retrieve secret from item
+    // let secret = item.get_secret().unwrap();
+    // let secret_string = match std::str::from_utf8(&secret) {
+    //     Ok(x) => x,
+    //     Err(x) => panic!("failed to read secret password")
+    // };
+    // println!("secret is: {}", secret_string);
+    // assert_eq!(secret, b"test_secret");
+
+    // delete item (deletes the dbus object, not the struct instance)
+    // item.delete().unwrap();
+
+    let service = "com.github.kelmes.gtkspot";
+    let username = "atheris84";
+
+    let keyring = keyring::Keyring::new(&service, &username);
+
+    let password = match keyring.get_password() {
+        Ok(x) => x,
+        Err(e) => {
+            println!("error retrieving password: {}", e);
+            println!("adding new password from stdin");
+
+            let mut input = String::new();
+            match io::stdin().read_line(&mut input) {
+                Ok(n) => {
+                    println!("{} bytes read", n);
+                    println!("{}", input);
+                }
+                Err(error) => println!("error: {}", error),
+            }
+            if input.ends_with("\n") {
+                input.pop();
+            }
+            println!("storing password in keyring");
+            match keyring.set_password(&input) {
+                Ok(x) => {},
+                Err(x) => {println!("error storing password: {}", x)},
+            };
+            input
+        }
+    };
+    println!("The password is '{}'", password);
+
+    let username = String::from(username);
+    let auth_data = String::from(password).as_bytes().to_vec();
     Ok(RespotCredentials {
         username,
         auth_type: AuthenticationType::AUTHENTICATION_USER_PASS,
