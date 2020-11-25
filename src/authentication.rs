@@ -10,6 +10,7 @@ use std::path::Path;
 pub fn create_credentials() -> Result<RespotCredentials, String> {
     let config_store = Configstore::new("com.github.kelmes.gtkspot", AppUI::Graphical).unwrap();
 
+    // defaults to: `~/.config/configstore-rs/com.github.kelmes.gtkspot/username.json`
     let username: String = match config_store.get("username") {
         Ok(x) => x,
         Err(e) => {
