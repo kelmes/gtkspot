@@ -1,61 +1,43 @@
-// extern crate secret_service;
-// use secret_service::SecretService;
-// use secret_service::EncryptionType;
 extern crate keyring;
-
 
 use librespot_core::authentication::Credentials as RespotCredentials;
 use librespot_protocol::authentication::AuthenticationType;
+use configstore::{Configstore, AppUI};
 
 use std::io::{self, Read};
+use std::path::Path;
 
 pub fn create_credentials() -> Result<RespotCredentials, String> {
-    // initialize secret service (dbus connection and encryption session)
-    // let ss = SecretService::new(EncryptionType::Dh).unwrap();
+    let config_store = Configstore::new("com.github.kelmes.gtkspot", AppUI::Graphical).unwrap();
 
-    // get default collection
-    // let collection = ss.get_default_collection().unwrap();
+    let username: String = match config_store.get("username") {
+        Ok(x) => x,
+        Err(e) => {
+            println!("error retrieving username: {}", e);
+            println!("adding new username from stdin");
 
-
-
-    // search items by properties
-    // let mut search_items = ss.search_items(
-    //     vec![("spotify_user", "atheris84")]
-    // ).unwrap();
-
-
-    // println!("found {} secrets", search_items.len());
-
-    // if search_items.len() == 0 {
-        //create new item
-    //     collection.create_item(
-    //         "gtkspot", // label
-    //         vec![("spotify_user", "atheris84")], // properties
-    //         b"st0rmS#@", //secret
-    //         true, // replace item with same attributes
-    //         "text/plain" // secret content type
-    //     ).unwrap();
-    //     search_items = ss.search_items(
-    //         vec![("spotify_user", "atheris84")]
-    //     ).unwrap();
-    // }
-
-    // let item = search_items.get(0).unwrap();
-
-    // retrieve secret from item
-    // let secret = item.get_secret().unwrap();
-    // let secret_string = match std::str::from_utf8(&secret) {
-    //     Ok(x) => x,
-    //     Err(x) => panic!("failed to read secret password")
-    // };
-    // println!("secret is: {}", secret_string);
-    // assert_eq!(secret, b"test_secret");
-
-    // delete item (deletes the dbus object, not the struct instance)
-    // item.delete().unwrap();
+            let mut input = String::new();
+            match io::stdin().read_line(&mut input) {
+                Ok(n) => {
+                    println!("{} bytes read", n);
+                    println!("{}", input);
+                }
+                Err(error) => println!("error: {}", error),
+            }
+            if input.ends_with("\n") {
+                input.pop();
+            }
+            println!("storing username in configstore");
+            match config_store.set("username", input.clone()) {
+                Ok(x) => x,
+                Err(e) => {println!("error storing username {}", e);}
+            };
+            input
+        },
+    };
 
     let service = "com.github.kelmes.gtkspot";
-    let username = "atheris84";
+    //let username = "atheris84";
 
     let keyring = keyring::Keyring::new(&service, &username);
 

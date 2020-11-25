@@ -127,17 +127,18 @@ use crate::track::Track;
 //}
 
 fn get_credentials(reset: bool) -> Credentials {
-    // let path = config::config_path("credentials.toml");
-    // if reset && fs::remove_file(&path).is_err() {
-    //     error!("could not delete credential file");
-    // }
+    let path = config::config_path("credentials.toml");
+    if reset && fs::remove_file(&path).is_err() {
+        error!("could not delete credential file");
+    }
 
     let creds = authentication::create_credentials().unwrap();
-        // crate::config::load_or_generate_default(&path, authentication::create_credentials, true)
-        //     .unwrap_or_else(|e| {
-        //         eprintln!("{}", e);
-        //         process::exit(1);
-        //     });
+
+    //let creds = match crate::config::load_or_generate_default(&path, authentication::create_credentials, true) {
+    //    Ok(x) => x,
+    //    Err(e) => {
+    //    },
+    //};
 
     // #[cfg(target_family = "unix")]
     // std::fs::set_permissions(path, std::os::unix::fs::PermissionsExt::from_mode(0o600))
