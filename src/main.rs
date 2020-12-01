@@ -7,9 +7,11 @@ extern crate gtk;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Mutex;
 
 use gio::prelude::*;
 use gtk::prelude::*;
+use glib::clone;
 
 use gtk::SearchEntryExt;
 use gtk::{ApplicationWindow, Builder, Button, ListBox, Revealer, SearchEntry};
@@ -133,10 +135,10 @@ struct Init {
 
 impl Init {
     fn new(creds: Result<Credentials, String>) -> Self {
-        Init {things: RefCell::new(SpotifyThings::new(creds))}
+        Init {things: RefCell::new(SpotifyThings::new(&creds))}
     }
     fn re_init(&self, creds: Result<Credentials, String>) {
-        self.things.replace(SpotifyThings::new(creds));
+        self.things.replace(SpotifyThings::new(&creds));
     }
 }
 //fn main() {}
@@ -179,12 +181,12 @@ impl Init {
 //}
 
 impl SpotifyThings {
-    fn new(credentials: Result<Credentials, String>) -> Result<SpotifyThings, &'static str> {
+    fn new(credentials: &Result<Credentials, String>) -> Result<SpotifyThings, &'static str> {
         let creds = 
         if credentials.is_err() {
             return Err("credentials not ok (yet?)");
         } else {
-            credentials.unwrap()
+            credentials.as_ref()
         };
         let cfg: crate::config::Config = {
             let path = config::config_path("config.toml");
@@ -201,7 +203,7 @@ impl SpotifyThings {
         let event_manager = EventManager::new();
         let spotify = Arc::new(spotify::Spotify::new(
             event_manager.clone(),
-            creds.clone(),
+            creds.unwrap().clone(),
             &cfg
         ));
         let queue = Arc::new(queue::Queue::new(spotify.clone()));
@@ -218,12 +220,13 @@ impl SpotifyThings {
     //}
 }
 
-fn search_track(query: &String, things: &SpotifyThings) -> Vec<Track> {
+// fn search_track(query: &String, things: &SpotifyThings) -> Vec<Track> {
+fn search_track(query: &String, spotify: Arc<spotify::Spotify>) -> Vec<Track> {
     println!("starting search");
-    let event_manager = &things.event_manager;
-    let spotify = &things.spotify;
-    let queue = &things.queue;
-    let library = &things.library;
+    // let event_manager = &things.event_manager;
+    // let spotify = &things.spotify;
+    // let queue = &things.queue;
+    // let library = &things.library;
     //let mut credentials = get_credentials(false);
 
 
@@ -468,24 +471,53 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("password_entry")
         .expect("Couldn't get password_entry");
 
-    login_button.connect_clicked(move |button| {
-        println!("re-trying credentials");
+    let credentials = Arc::new(Mutex::new(authentication::try_credentials()));
+    let test = Arc::new(Mutex::new(20));
+    let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(&authentication::try_credentials())));
+
+    login_button.connect_clicked(clone!(@weak test, @weak credentials, @strong spotify_things => move |_| {
+        let username = String::from(username_entry.get_text());
         let password = String::from(password_entry.get_text());
+        println!("re-trying credentials");
         login_stack.set_visible_child(&ui_box);
-    });
+        *(test.clone().lock().unwrap()) = 5;
+        // *Arc::clone(&credentials).lock().unwrap() = authentication::create_credentials(username, password);
+        *spotify_things.clone().lock().unwrap() = SpotifyThings::new(
+            &authentication::create_credentials(username, password)
+        );
+        println!("done setting credentials");
+    }));
 
 
-    let credentials = authentication::try_credentials();
-    if credentials.is_ok() {
-        let init = Init::new(credentials);
-        login_button.emit("clicked", &[]);
-    }
-
-    //if init.things.try_borrow().is_ok() {
-    //    login_stack.set_visible_child(&ui_box);
+    //if credentials.is_ok() {
+    //    let init = Init::new(credentials);
+    //    login_button.emit("clicked", &[]);
     //}
 
+    // let init = if credentials.is_ok() {
+        // login_button.emit("clicked", &[]);
+        // Ok(Init::new(credentials))
+    // } else {
+        // Err("no credentials")
+    // };
 
+    //if credentials.clone().lock().is_ok() {
+    //    // login_stack.set_visible_child(&ui_box);
+    //    login_button.emit("clicked", &[]);
+    //}
+
+    //let spotify_things: std::result::Result<SpotifyThings, &'static str> = match Arc::clone(&credentials).lock() {
+    //    Ok(x) => {
+    //        println!("credentials ok");
+    //        *test.clone().lock().unwrap() += 2;
+    //        // login_button.emit("clicked", &[]);
+    //        SpotifyThings::new(&x)
+    //    }
+    //    Err(_e) => Err("creds failed")
+    //};
+
+    // let things = init.unwrap().things.try_borrow().unwrap().as_ref().unwrap();
+    // let spotify = spotify_things.spotify.clone();
 
 
     //search_box.connect_stop_search(|sbox: &SearchEntry| {
@@ -495,6 +527,15 @@ fn build_ui<'a>(application: &gtk::Application) {
 
     search_box.connect_activate(move |sbox| {
         println!("searching");
+
+        let spot_things_ref = spotify_things.clone();
+        let spot_things = spot_things_ref.lock();
+        let things = spot_things.as_ref();
+        // let things: = match spotify_things.clone().lock().unwrap().as_ref() {
+        let things = match things {
+            Ok(x) => x.as_ref().unwrap(),
+            Err(e) => { println!("not yet initialised"); return(); }
+        };
         let mut listbox_row_builder = gtk::ListBoxRowBuilder::new();
         listbox_row_builder = listbox_row_builder.activatable(true);
         println!("searching...");
@@ -515,13 +556,14 @@ fn build_ui<'a>(application: &gtk::Application) {
             }
         };
         // let credentials = 
-        let init = if credentials.is_ok() {
-            Ok(Init::new(credentials))
-        } else {
-            Err("no credentials")
-        };
+        //let init = if credentials.is_ok() {
+        //    Ok(Init::new(credentials))
+        //} else {
+        //    Err("no credentials")
+        //};
         // init.re_init(credentials);
-        let results = search_track(&query, init.unwrap().things.try_borrow().unwrap().as_ref().unwrap());
+        // let results = search_track(&query, init.unwrap().things.try_borrow().unwrap().as_ref().unwrap());
+        let results = search_track(&query, things.spotify.clone());
         //let search_finished = async {
             for child in results_listbox.get_children() {
               //results_listbox.remove(&child);

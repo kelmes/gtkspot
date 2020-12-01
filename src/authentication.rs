@@ -108,13 +108,13 @@ pub fn create_credentials(username: String, password: String) -> Result<RespotCr
         Ok(x) => x,
         Err(e) => {
             println!("error retrieving password: {}", e);
-            println!("adding new password from stdin");
 
             println!("storing password in keyring");
             match keyring.set_password(&password) {
                 Ok(x) => {},
                 Err(x) => {println!("error storing password: {}", x)},
             };
+            println!("using password {}", password);
             password
         }
     };
