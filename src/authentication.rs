@@ -70,6 +70,13 @@ pub fn try_credentials() -> Result<RespotCredentials, String> {
     };
     println!("The password is '{}'", password);
 
+    if username.len() == 0 {
+        return Err("empty username".to_string());
+    }
+    if password.len() == 0 {
+        return Err("empty password".to_string());
+    }
+
     let username = String::from(username);
     let auth_data = String::from(password).as_bytes().to_vec();
     Ok(RespotCredentials {
