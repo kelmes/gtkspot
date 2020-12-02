@@ -135,10 +135,10 @@ struct Init {
 
 impl Init {
     fn new(creds: Result<Credentials, String>) -> Self {
-        Init {things: RefCell::new(SpotifyThings::new(&creds))}
+        Init {things: RefCell::new(SpotifyThings::new(creds))}
     }
     fn re_init(&self, creds: Result<Credentials, String>) {
-        self.things.replace(SpotifyThings::new(&creds));
+        self.things.replace(SpotifyThings::new(creds));
     }
 }
 //fn main() {}
@@ -181,13 +181,14 @@ impl Init {
 //}
 
 impl SpotifyThings {
-    fn new(credentials: &Result<Credentials, String>) -> Result<SpotifyThings, &'static str> {
+    fn new(credentials: Result<Credentials, String>) -> Result<SpotifyThings, &'static str> {
         let creds = 
         if credentials.is_err() {
             return Err("credentials not ok (yet?)");
         } else {
-            credentials.as_ref()
+            credentials.unwrap()
         };
+        println!("using credentials: {} {}", creds.username, String::from_utf8(creds.auth_data.clone()).unwrap());
         let cfg: crate::config::Config = {
             let path = config::config_path("config.toml");
             crate::config::load_or_generate_default(
@@ -203,7 +204,7 @@ impl SpotifyThings {
         let event_manager = EventManager::new();
         let spotify = Arc::new(spotify::Spotify::new(
             event_manager.clone(),
-            creds.unwrap().clone(),
+            creds,
             &cfg
         ));
         let queue = Arc::new(queue::Queue::new(spotify.clone()));
@@ -471,11 +472,11 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("password_entry")
         .expect("Couldn't get password_entry");
 
-    let credentials = Arc::new(Mutex::new(authentication::try_credentials()));
+    let credentials = authentication::try_credentials();
     let test = Arc::new(Mutex::new(20));
-    let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(&authentication::try_credentials())));
+    let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
 
-    login_button.connect_clicked(clone!(@weak test, @weak credentials, @strong spotify_things => move |_| {
+    login_button.connect_clicked(clone!(@weak test, @strong spotify_things => move |_| {
         let username = String::from(username_entry.get_text());
         let password = String::from(password_entry.get_text());
         println!("re-trying credentials");
@@ -483,7 +484,7 @@ fn build_ui<'a>(application: &gtk::Application) {
         *(test.clone().lock().unwrap()) = 5;
         // *Arc::clone(&credentials).lock().unwrap() = authentication::create_credentials(username, password);
         *spotify_things.clone().lock().unwrap() = SpotifyThings::new(
-            &authentication::create_credentials(username, password)
+            authentication::create_credentials(username, password)
         );
         println!("done setting credentials");
     }));
