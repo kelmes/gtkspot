@@ -7,7 +7,7 @@ extern crate gtk;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Mutex;
+use std::sync::{Mutex,RwLock};
 
 use gio::prelude::*;
 use gtk::prelude::*;
@@ -189,6 +189,9 @@ impl SpotifyThings {
             credentials.unwrap()
         };
         println!("using credentials: {} {}", creds.username, String::from_utf8(creds.auth_data.clone()).unwrap());
+        if !spotify::Spotify::test_credentials(creds.clone()) {
+            return Err("testing credentials failed");
+        }
         let cfg: crate::config::Config = {
             let path = config::config_path("config.toml");
             crate::config::load_or_generate_default(
@@ -414,6 +417,29 @@ struct WindowComponents {
     search_revealer: &'static Revealer,
 }
 
+lazy_static! {
+    static ref startup_things: (Arc<RwLock<Result<SpotifyThings, &'static str>>>, bool) = {
+        let credentials = authentication::try_credentials();
+        let mut success = false;
+        let things = Arc::new(RwLock::new(
+        if credentials.is_ok() {
+            println!("credentials were ok");
+            if spotify::Spotify::test_credentials(credentials.clone().unwrap()) {
+                println!("tested credentials passed");
+                success = true;
+                SpotifyThings::new(credentials)
+            } else {
+                Err("couldn't log in with credentials")
+            }
+        } else {
+            Err("failed to read credentials")
+        }));
+        (things, success)
+    };
+    static ref spotify_things: Arc<RwLock<Result<SpotifyThings, &'static str>>> = startup_things.0.clone();
+    static ref logged_in: bool = startup_things.1;
+}
+
 fn build_ui<'a>(application: &gtk::Application) {
     let glade_src = include_str!("spotui.glade");
     let builder = Builder::from_string(glade_src);
@@ -472,99 +498,50 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("password_entry")
         .expect("Couldn't get password_entry");
 
-    let credentials = authentication::try_credentials();
-    let test = Arc::new(Mutex::new(20));
-    let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
+    // let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
 
-    login_button.connect_clicked(clone!(@weak test, @strong spotify_things => move |_| {
+    if *logged_in {
+        login_stack.set_visible_child(&ui_box);
+    }
+
+    login_button.connect_clicked(move |_| {
         let username = String::from(username_entry.get_text());
         let password = String::from(password_entry.get_text());
         println!("re-trying credentials");
-        login_stack.set_visible_child(&ui_box);
-        *(test.clone().lock().unwrap()) = 5;
-        // *Arc::clone(&credentials).lock().unwrap() = authentication::create_credentials(username, password);
-        *spotify_things.clone().lock().unwrap() = SpotifyThings::new(
-            authentication::create_credentials(username, password)
-        );
+        let credentials = authentication::create_credentials(username, password);
+        if credentials.is_ok() {
+            let new_things = SpotifyThings::new(credentials);
+            if new_things.is_ok() {
+                *spotify_things.write().unwrap() = new_things;
+                login_stack.set_visible_child(&ui_box);
+            }
+            else {
+                println!("failed to login with credentials");
+            }
+        } else {
+            println!("credentials were not ok");
+        }
         println!("done setting credentials");
-    }));
+        // drop(spotify_things);
+    });
 
-
-    //if credentials.is_ok() {
-    //    let init = Init::new(credentials);
-    //    login_button.emit("clicked", &[]);
-    //}
-
-    // let init = if credentials.is_ok() {
-        // login_button.emit("clicked", &[]);
-        // Ok(Init::new(credentials))
-    // } else {
-        // Err("no credentials")
-    // };
-
-    //if credentials.clone().lock().is_ok() {
-    //    // login_stack.set_visible_child(&ui_box);
-    //    login_button.emit("clicked", &[]);
-    //}
-
-    //let spotify_things: std::result::Result<SpotifyThings, &'static str> = match Arc::clone(&credentials).lock() {
-    //    Ok(x) => {
-    //        println!("credentials ok");
-    //        *test.clone().lock().unwrap() += 2;
-    //        // login_button.emit("clicked", &[]);
-    //        SpotifyThings::new(&x)
-    //    }
-    //    Err(_e) => Err("creds failed")
-    //};
-
-    // let things = init.unwrap().things.try_borrow().unwrap().as_ref().unwrap();
-    // let spotify = spotify_things.spotify.clone();
-
-
-    //search_box.connect_stop_search(|sbox: &SearchEntry| {
-    //    search_revealer.set_reveal_child(false);
-    //});
-    //search_box.connect_stop_search(|sbox| sbox_stop_search(&sbox, &search_revealer));
 
     search_box.connect_activate(move |sbox| {
         println!("searching");
 
         let spot_things_ref = spotify_things.clone();
-        let spot_things = spot_things_ref.lock();
+        let spot_things = spot_things_ref.read();
         let things = spot_things.as_ref();
-        // let things: = match spotify_things.clone().lock().unwrap().as_ref() {
         let things = match things {
-            Ok(x) => x.as_ref().unwrap(),
-            Err(e) => { println!("not yet initialised"); return(); }
+           Ok(x) => x,
+           Err(e) => { println!("not yet initialised"); return(); }
         };
         let mut listbox_row_builder = gtk::ListBoxRowBuilder::new();
         listbox_row_builder = listbox_row_builder.activatable(true);
         println!("searching...");
         let query = String::from(sbox.get_text().as_str());
-        let username_entry: gtk::Entry = builder
-            .get_object("username_entry")
-            .expect("Couldn't get username_entry");
-        let password_entry: gtk::Entry = builder
-            .get_object("password_entry")
-            .expect("Couldn't get password_entry");
-        println!("re-trying credentials");
-        let username = String::from(username_entry.get_text());
-        let password = String::from(password_entry.get_text());
-        let credentials = match authentication::try_credentials() {
-            Ok(x) => Ok(x),
-            Err(e) => {
-                authentication::create_credentials(username, password)
-            }
-        };
-        // let credentials = 
-        //let init = if credentials.is_ok() {
-        //    Ok(Init::new(credentials))
-        //} else {
-        //    Err("no credentials")
-        //};
-        // init.re_init(credentials);
-        // let results = search_track(&query, init.unwrap().things.try_borrow().unwrap().as_ref().unwrap());
-        let results = search_track(&query, things.spotify.clone());
+        let results = search_track(&query, things.as_ref().unwrap().spotify.clone());
+        // let results = search_track(&query, spotify_things.read().unwrap().spotify.clone());
         //let search_finished = async {
             for child in results_listbox.get_children() {
               //results_listbox.remove(&child);
@@ -581,13 +558,6 @@ fn build_ui<'a>(application: &gtk::Application) {
                 results_listbox.add(&new_entry);
             }
         //};
-        // block_on(search_finished);
-        //let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-        //new_entry_box.add(&new_entry_label);
-        //new_entry.add(&new_entry_box);
-        //results_listbox.add(&new_entry);
-        ////results_listbox.show_all();
-        //new_entry.show_all();
     });
 
     window.show_all();

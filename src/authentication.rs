@@ -95,36 +95,44 @@ pub fn create_credentials(username: String, password: String) -> Result<RespotCr
     let keyring = keyring::Keyring::new(&service, &username);
 
     let auth_data = password.as_bytes().to_vec();
+    match config_store.set("username", username.clone()) {
+        Ok(x) => x,
+        Err(e) => {println!("error storing username {}", e);}
+    };
 
     // let credentials = match try_credentials() 
     
-    let username: String = match config_store.get("username") {
-        Ok(x) => x,
-        Err(e) => {
-            println!("error retrieving username: {}", e);
-            println!("storing username in configstore");
-            match config_store.set("username", username.clone()) {
-                Ok(x) => x,
-                Err(e) => {println!("error storing username {}", e);}
-            };
-            username.clone()
-        },
-    };
+    // let username: String = match config_store.get("username") {
+    //     Ok(x) => x,
+    //     Err(e) => {
+    //         println!("error retrieving username: {}", e);
+    //         println!("storing username in configstore");
+    //         match config_store.set("username", username.clone()) {
+    //             Ok(x) => x,
+    //             Err(e) => {println!("error storing username {}", e);}
+    //         };
+    //         username.clone()
+    //     },
+    // };
 
-    let password = match keyring.get_password() {
-        Ok(x) => x,
-        Err(e) => {
-            println!("error retrieving password: {}", e);
-
-            println!("storing password in keyring");
-            match keyring.set_password(&password) {
-                Ok(x) => {},
-                Err(x) => {println!("error storing password: {}", x)},
-            };
-            println!("using password {}", password);
-            password
-        }
+    match keyring.set_password(&password) {
+        Ok(x) => {},
+        Err(x) => {println!("error storing password: {}", x)},
     };
+    //let password = match keyring.get_password() {
+    //    Ok(x) => x,
+    //    Err(e) => {
+    //        println!("error retrieving password: {}", e);
+
+    //        println!("storing password in keyring");
+    //        match keyring.set_password(&password) {
+    //            Ok(x) => {},
+    //            Err(x) => {println!("error storing password: {}", x)},
+    //        };
+    //        println!("using password {}", password);
+    //        password
+    //    }
+    //};
     let username = String::from(username);
     let auth_data = String::from(password).as_bytes().to_vec();
 
