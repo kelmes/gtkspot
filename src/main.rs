@@ -441,6 +441,10 @@ fn build_ui<'a>(application: &gtk::Application) {
     let search_revealer: Revealer = builder
         .get_object("search_revealer")
         .expect("Couldn't get search_revealer");
+        
+    let search_combo: gtk::Box = builder
+        .get_object("search_combo")
+        .expect("Couldn't get search_combo");
 
     let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
 
@@ -473,14 +477,38 @@ fn build_ui<'a>(application: &gtk::Application) {
     let password_entry: gtk::Entry = builder
         .get_object("password_entry")
         .expect("Couldn't get password_entry");
+    let login_error_bar: gtk::InfoBar = builder
+        .get_object("login_error_bar")
+        .expect("Couldn't get login error bar");
+    login_error_bar.set_revealed(false);
+
+    login_error_bar.connect_close(|bar| {
+        bar.set_revealed(false);
+    });
+    login_error_bar.connect_response(|bar, response| {
+        if response == gtk::ResponseType::Close {
+            bar.set_revealed(false);
+        }
+    });
 
     // let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
 
     if *logged_in {
         login_stack.set_visible_child(&ui_box);
+        search_combo.set_visible(true);
     }
 
+    password_entry.connect_activate(|_| {
+        let glade_src = include_str!("spotui.glade");
+        let builder = Builder::from_string(glade_src);
+        let login_button: gtk::Button = builder
+            .get_object("login_button")
+            .expect("couldn't get login button");
+        login_button.emit("clicked", &[]);
+    });
+
     login_button.connect_clicked(move |_| {
+        login_error_bar.set_revealed(false);
         let username = String::from(username_entry.get_text());
         let password = String::from(password_entry.get_text());
         println!("re-trying credentials");
@@ -490,9 +518,11 @@ fn build_ui<'a>(application: &gtk::Application) {
             if new_things.is_ok() {
                 *spotify_things.write().unwrap() = new_things;
                 login_stack.set_visible_child(&ui_box);
+                search_combo.set_visible(true);
             }
             else {
                 println!("failed to login with credentials");
+                login_error_bar.set_revealed(true);
             }
         } else {
             println!("credentials were not ok");
