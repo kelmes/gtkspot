@@ -49,6 +49,8 @@
               <object class="GtkEntry" id="password_entry">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
+                <property name="visibility">False</property>
+                <property name="invisible-char">*</property>
                 <property name="input-purpose">password</property>
               </object>
               <packing>
