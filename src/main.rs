@@ -321,73 +321,73 @@ fn search_track(query: &String, spotify: Arc<spotify::Spotify>) -> Vec<Track> {
     //None
 }
 
-//fn play_track(track_id: &String) {
+// fn play_track(track_id: &String) {
 //    env_logger::init();
 //    let mut core = Core::new().unwrap();
 //    let handle = core.handle();
-//
+
 //    let session_config = SessionConfig::default();
-//
-//    //let args: Vec<_> = env::args().collect();
-//    //if args.len() != 4 {
-//    //    println!("Usage: {} USERNAME PASSWORD PLAYLIST", args[0]);
-//    //}
-//    //let username = args[1].to_owned();
-//    //let password = args[2].to_owned();
-//    //let credentials = Credentials::with_password(username, password);
-//
-//    //let uri_split = args[3].split(":");
-//    //let uri_parts: Vec<&str> = uri_split.collect();
-//    //println!("{}, {}, {}", uri_parts[0], uri_parts[0], uri_parts[0]);
-//
-//    //let plist_uri = SpotifyId::from_base62(uri_parts[0]).unwrap();
-//
-//    //let session = core
-//    //    .run(Session::connect(session_config, credentials, None, handle))
-//    //    .unwrap();
-//
-//    //let plist = core.run(Playlist::get(&session, plist_uri)).unwrap();>
-//    //println!("{:?}", plist);
-//    //for track_id in plist.tracks {
-//    //    let plist_track = core.run(Track::get(&session, track_id)).unwrap();
-//    //    println!("track: {} ", plist_track.name);
-//    //}
-//
+
+   //let args: Vec<_> = env::args().collect();
+   //if args.len() != 4 {
+   //    println!("Usage: {} USERNAME PASSWORD PLAYLIST", args[0]);
+   //}
+   //let username = args[1].to_owned();
+   //let password = args[2].to_owned();
+   //let credentials = Credentials::with_password(username, password);
+
+   //let uri_split = args[3].split(":");
+   //let uri_parts: Vec<&str> = uri_split.collect();
+   //println!("{}, {}, {}", uri_parts[0], uri_parts[0], uri_parts[0]);
+
+   //let plist_uri = SpotifyId::from_base62(uri_parts[0]).unwrap();
+
+   //let session = core
+   //    .run(Session::connect(session_config, credentials, None, handle))
+   //    .unwrap();
+
+   //let plist = core.run(Playlist::get(&session, plist_uri)).unwrap();>
+   //println!("{:?}", plist);
+   //for track_id in plist.tracks {
+   //    let plist_track = core.run(Track::get(&session, track_id)).unwrap();
+   //    println!("track: {} ", plist_track.name);
+   //}
+
 //    let player_config = PlayerConfig::default();
-//
+
 //    let args: Vec<_> = env::args().collect();
 //    if args.len() != 4 {
 //        println!("Usage: {} USERNAME PASSWORD TRACK", args[0]);
 //    }
-//    //let username = args[1].to_owned();
-//    //let password = args[2].to_owned();
-//    let username = "uesrname".to_owned();
-//    let password = "password".to_owned();
-//    let credentials = Credentials::with_password(username, password);
-//
+   //let username = args[1].to_owned();
+   //let password = args[2].to_owned();
+   // let username = "uesrname".to_owned();
+   // let password = "password".to_owned();
+   // let credentials = Credentials::with_password(username, password);
+
 //    let track = SpotifyId::from_base62(&track_id).unwrap();
-//
+
 //    let backend = audio_backend::find(None).unwrap();
-//
+
 //    println!("Connecting ..");
 //    let session = core
 //        .run(Session::connect(session_config, credentials, None, handle))
 //        .unwrap();
-//
+
 //    let (mut player, _) = Player::new(player_config, session.clone(), None, move || {
 //        (backend)(None)
 //    });
-//
+
 //    let receiver = player.load(track, true, 0);
-//
+
 //    println!("Playing...");
 //    player.play();
-//    //core.run(receiver).unwrap();
+   //core.run(receiver).unwrap();
 //    core.run((player.get_end_of_track_future()));
-//    //tokio_compat::run((player.get_end_of_track_future()).unwrap();
-//
+   //tokio_compat::run((player.get_end_of_track_future()).unwrap();
+
 //    println!("Done");
-//}
+// }
 
 struct WindowComponents {
     search_revealer: &'static Revealer,
@@ -516,7 +516,8 @@ fn build_ui<'a>(application: &gtk::Application) {
         listbox_row_builder = listbox_row_builder.activatable(true);
         println!("searching...");
         let query = String::from(sbox.get_text().as_str());
-        let results = search_track(&query, things.as_ref().unwrap().spotify.clone());
+        let spotify = things.as_ref().unwrap().spotify.clone();
+        let results = search_track(&query, spotify.clone());
         // let results = search_track(&query, spotify_things.read().unwrap().spotify.clone());
         //let search_finished = async {
             for child in results_listbox.get_children() {
@@ -533,6 +534,12 @@ fn build_ui<'a>(application: &gtk::Application) {
                 new_entry.show_all();
                 results_listbox.add(&new_entry);
             }
+        let first_result = results.get(0);
+        println!("playing first track");
+        spotify.load(first_result.unwrap());
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+        spotify.play();
+        println!("volume is {}", spotify.volume());
         //};
     });
 
@@ -543,8 +550,26 @@ fn sbox_stop_search<'a>(sbox: &'a gtk::SearchEntry, search_revealer: &'a Reveale
     search_revealer.set_reveal_child(false);
 }
 
+fn setup_logger() -> Result<(), fern::InitError> {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Info)
+        .chain(std::io::stdout())
+        //.chain(fern::log_file("output.log")?)
+        .apply()?;
+    Ok(())
+}
 // static init: Init = Init { things: RefCell::new(Err("not initialised yet")) };
 fn main() {
+    setup_logger();
     let application = gtk::Application::new(
         Some("com.github.gtk-rs.examples.builder_basics"),
         Default::default(),

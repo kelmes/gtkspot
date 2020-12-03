@@ -152,12 +152,14 @@ impl futures::Future for Worker {
                             self.player.load(id, false, 0);
                             self.play_task = Box::pin(self.player.get_end_of_track_future().compat());
                             //self.play_task = Box::pin(self.player.load(id, false, 0).compat());
-                            info!("player loading track: {:?}", track);
+                            println!("player loading track: {:?}", track);
                         } else {
                             self.events.send(Event::Player(PlayerEvent::FinishedTrack));
                         }
                     }
                     WorkerCommand::Play => {
+                        info!("playing");
+                        println!("playing");
                         self.player.play();
                         self.events.send(Event::Player(PlayerEvent::Playing));
                         self.refresh_task = self.create_refresh();
@@ -699,6 +701,7 @@ impl Spotify {
 
     pub fn load(&self, track: &Track) {
         info!("loading track: {:?}", track);
+        println!("loading track {:?}", track);
         self.channel
             .unbounded_send(WorkerCommand::Load(Box::new(track.clone())))
             .unwrap();
