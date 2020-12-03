@@ -227,30 +227,6 @@ impl SpotifyThings {
 // fn search_track(query: &String, things: &SpotifyThings) -> Vec<Track> {
 fn search_track(query: &String, spotify: Arc<spotify::Spotify>) -> Vec<Track> {
     println!("starting search");
-    // let event_manager = &things.event_manager;
-    // let spotify = &things.spotify;
-    // let queue = &things.queue;
-    // let library = &things.library;
-    //let mut credentials = get_credentials(false);
-
-
-    // Things here may cause the process to abort; we must do them before creating curses windows
-    // otherwise the error message will not be seen by a user
-    //let cfg: crate::config::Config = {
-    //    let path = config::config_path("config.toml");
-    //    crate::config::load_or_generate_default(
-    //        path,
-    //        |_| Ok(crate::config::Config::default()),
-    //        false,
-    //    )
-    //    .unwrap_or_else(|e| {
-    //        eprintln!("{}", e);
-    //        process::exit(1);
-    //    })
-    //};
-
-
-
 
     let mut found_tracks: Vec<Track> = vec![];
     let found_track_count: u32 = if let Some(results) = spotify.search_track(&query, 50, 0_u32) {
