@@ -1,7 +1,3 @@
-//! # Builder Basics Sample
-//!
-//! This sample demonstrates how to use the builder with an imported glade file
-
 extern crate gio;
 extern crate gtk;
 
@@ -20,31 +16,6 @@ use std::env;
 use std::env::args;
 //use tokio_compat::prelude::*;
 use tokio_core::reactor::Core;
-
-//use librespot::core::authentication::Credentials;
-//use librespot::core::config::SessionConfig;
-//use librespot::core::session::Session;
-//use librespot::core::spotify_id::SpotifyId;
-//use librespot::metadata::{Metadata, Playlist, Track};
-//use librespot::playback::config::PlayerConfig;
-//
-//use env_logger;
-//use librespot::playback::audio_backend;
-//use librespot::playback::player::Player;
-//
-//
-//use rspotify::client::Spotify;
-//use rspotify::oauth2::{SpotifyClientCredentials, SpotifyOAuth};
-//use rspotify::senum::Country;
-//use rspotify::util::get_token;
-
-//use futures::executor::block_on;
-//use futures::join;
-//
-//use std::path::Path;
-//
-//use librespot_core::authentication::Credentials as RespotCredentials;
-//use librespot_protocol::authentication::AuthenticationType;
 
 extern crate clap;
 extern crate crossbeam_channel;
@@ -90,6 +61,9 @@ use std::process;
 use std::str::FromStr;
 use std::sync::Arc;
 
+// use async_std::task;
+use std::thread;
+
 use clap::{App, Arg};
 
 use librespot_core::authentication::Credentials;
@@ -108,8 +82,6 @@ mod spotify;
 mod track;
 mod traits;
 mod search;
-
-
 
 #[cfg(feature = "mpris")]
 mod mpris;
@@ -141,44 +113,6 @@ impl Init {
         self.things.replace(SpotifyThings::new(creds));
     }
 }
-//fn main() {}
-
-//#[tokio::main]
-//async fn main() {
-//    let search_finished = async {
-//        search().await;
-//    };
-//
-//    block_on(search_finished);
-//}
-
-//fn get_credentials(reset: bool) -> Credentials {
-//    let path = config::config_path("credentials.toml");
-//    if reset && fs::remove_file(&path).is_err() {
-//        error!("could not delete credential file");
-//    }
-//
-//    //let creds = authentication::create_credentials().unwrap();
-//
-//    //let creds = match crate::config::load_or_generate_default(&path, authentication::create_credentials, true) {
-//    //    Ok(x) => x,
-//    //    Err(e) => {
-//    //    },
-//    //};
-//
-//    // #[cfg(target_family = "unix")]
-//    // std::fs::set_permissions(path, std::os::unix::fs::PermissionsExt::from_mode(0o600))
-//    //     .unwrap_or_else(|e| {
-//    //         eprintln!("{}", e);
-//    //         process::exit(1);
-//    //     });
-//
-//    creds
-//}
-
-//trait SpotifyThingsTrait {
-//    fn init(&mut self, credentials: Result<Credentials, String>) -> Result<&'static str, &'static str>;
-//}
 
 impl SpotifyThings {
     fn new(credentials: Result<Credentials, String>) -> Result<SpotifyThings, &'static str> {
@@ -218,10 +152,6 @@ impl SpotifyThings {
         ));
         Ok(SpotifyThings{event_manager, spotify, queue, library})
     }
-    //fn init(&mut self, credentials: Result<Credentials, String>) -> Result<&'static str, &'static str> {
-    //    new_set = new();
-    //    self.spotify
-    //}
 }
 
 // fn search_track(query: &String, things: &SpotifyThings) -> Vec<Track> {
@@ -270,124 +200,7 @@ fn search_track(query: &String, spotify: Arc<spotify::Spotify>) -> Vec<Track> {
 
     found_tracks
 
-    // old version here
-    // Set client_id and client_secret in .env file or
-    // export CLIENT_ID="your client_id"
-    // export CLIENT_SECRET="secret"
-    // export REDIRECT_URI=your-direct-uri
-
-    // Or set client_id, client_secret,redirect_uri explictly
-    //let mut oauth = SpotifyOAuth::default()
-    //    .client_id("33275c3ad21a4781bf4facf3a1e0e778")
-    //    .client_secret("28a15495fcbe4175abce0d36034514eb")
-    //    .redirect_uri("https://caelus.nz/spotify_auth")
-    //    .build();
-
-    ////let mut oauth = SpotifyOAuth::default().scope("user-read-private").build();
-    //match get_token(&mut oauth).await {
-    //    Some(token_info) => {
-    //        //let client_credential = SpotifyClientCredentials::default()
-    //        //    .token_info(token_info)
-    //        //    .build();
-    //        // Or set client_id and client_secret explictly
-    //        let client_credential = SpotifyClientCredentials::default()
-    //            .client_id("e1dce60f1e274e20861ce5d96142a4d3")
-    //            .client_secret("23a3a18423b14bf383ce46c8ee271094")
-    //            .build();
-    //        let spotify = Spotify::default()
-    //            .client_credentials_manager(client_credential)
-    //            .build();
-    //        //let query = "abba";
-    //        let result = spotify
-    //            .search_track(query, 10, 0, Some(Country::UnitedStates))
-    //            .await;
-    //        println!("search result:{:?}", result);
-    //        let actual_result = match result {
-    //            Ok(x) => x,
-    //            Err(e) => {
-    //                panic!(e);
-    //            }
-    //        };
-    //        for (num, track) in actual_result.tracks.items.iter().enumerate() {
-    //            println!("{}, {}, {}", num, track.name, track.id.as_ref().unwrap());
-    //        }
-    //        return Some(actual_result);
-    //        //println!("playing item 0");
-    //        //let track_to_play = actual_result.tracks.items.first();
-    //        //play_track(track_to_play.unwrap().id.as_ref().unwrap());
-    //    }
-    //    None => println!("auth failed"),
-    //};
-    //None
 }
-
-// fn play_track(track_id: &String) {
-//    env_logger::init();
-//    let mut core = Core::new().unwrap();
-//    let handle = core.handle();
-
-//    let session_config = SessionConfig::default();
-
-   //let args: Vec<_> = env::args().collect();
-   //if args.len() != 4 {
-   //    println!("Usage: {} USERNAME PASSWORD PLAYLIST", args[0]);
-   //}
-   //let username = args[1].to_owned();
-   //let password = args[2].to_owned();
-   //let credentials = Credentials::with_password(username, password);
-
-   //let uri_split = args[3].split(":");
-   //let uri_parts: Vec<&str> = uri_split.collect();
-   //println!("{}, {}, {}", uri_parts[0], uri_parts[0], uri_parts[0]);
-
-   //let plist_uri = SpotifyId::from_base62(uri_parts[0]).unwrap();
-
-   //let session = core
-   //    .run(Session::connect(session_config, credentials, None, handle))
-   //    .unwrap();
-
-   //let plist = core.run(Playlist::get(&session, plist_uri)).unwrap();>
-   //println!("{:?}", plist);
-   //for track_id in plist.tracks {
-   //    let plist_track = core.run(Track::get(&session, track_id)).unwrap();
-   //    println!("track: {} ", plist_track.name);
-   //}
-
-//    let player_config = PlayerConfig::default();
-
-//    let args: Vec<_> = env::args().collect();
-//    if args.len() != 4 {
-//        println!("Usage: {} USERNAME PASSWORD TRACK", args[0]);
-//    }
-   //let username = args[1].to_owned();
-   //let password = args[2].to_owned();
-   // let username = "uesrname".to_owned();
-   // let password = "password".to_owned();
-   // let credentials = Credentials::with_password(username, password);
-
-//    let track = SpotifyId::from_base62(&track_id).unwrap();
-
-//    let backend = audio_backend::find(None).unwrap();
-
-//    println!("Connecting ..");
-//    let session = core
-//        .run(Session::connect(session_config, credentials, None, handle))
-//        .unwrap();
-
-//    let (mut player, _) = Player::new(player_config, session.clone(), None, move || {
-//        (backend)(None)
-//    });
-
-//    let receiver = player.load(track, true, 0);
-
-//    println!("Playing...");
-//    player.play();
-   //core.run(receiver).unwrap();
-//    core.run((player.get_end_of_track_future()));
-   //tokio_compat::run((player.get_end_of_track_future()).unwrap();
-
-//    println!("Done");
-// }
 
 struct WindowComponents {
     search_revealer: &'static Revealer,
@@ -422,17 +235,22 @@ fn build_ui<'a>(application: &gtk::Application) {
 
     let window: ApplicationWindow = builder.get_object("window1").expect("Couldn't get window1");
     window.set_application(Some(application));
-    let bigbutton: Button = builder.get_object("button1").expect("Couldn't get button1");
 
-    let login_stack: gtk::Stack = builder
+
+
+    let login_stack: Arc<RwLock<gtk::Stack>> = Arc::new(RwLock::new(builder
         .get_object("login_stack")
-        .expect("couldn't get login_stack");
+        .expect("couldn't get login_stack")));
     let login_form: gtk::Grid = builder
         .get_object("login_form")
         .expect("couldn't get login_form");
-    let ui_box: gtk::Box = builder
+    let login_ui: Rc<RefCell<gtk::Box>> = Rc::new(RefCell::new(builder
+        .get_object("login_ui")
+        .expect("couldn't get login_ui")));
+    let ui_box: Arc<RwLock<gtk::Box>> = Arc::new(RwLock::new(builder
+    // let ui_box: Rc<gtk::Box> = Rc::new(builder
         .get_object("main_ui")
-        .expect("couldn't get main_ui");
+        .expect("couldn't get main_ui")));
 
     let results_listbox: ListBox = builder
         .get_object("results_listbox")
@@ -445,6 +263,9 @@ fn build_ui<'a>(application: &gtk::Application) {
     let search_combo: gtk::Box = builder
         .get_object("search_combo")
         .expect("Couldn't get search_combo");
+    let search_button: gtk::Button = builder
+        .get_object("search_button")
+        .expect("Couldn't get search_button");
 
     let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
 
@@ -455,7 +276,7 @@ fn build_ui<'a>(application: &gtk::Application) {
 
     {
         let sr2 = sr.clone();
-        bigbutton.connect_clicked(move |_| {
+        search_button.connect_clicked(move |_| {
             sr2.borrow_mut().set_reveal_child(true);
         });
     }
@@ -467,9 +288,12 @@ fn build_ui<'a>(application: &gtk::Application) {
         });
     }
 
-    let login_button: gtk::Button = builder
+    //let login_button: gtk::Button = builder
+    //    .get_object("login_button")
+    //    .expect("couldn't get login button");
+    let login_button: Rc<RefCell<gtk::Button>> = Rc::new(RefCell::new(builder
         .get_object("login_button")
-        .expect("couldn't get login button");
+        .expect("couldn't get login button")));
 
     let username_entry: gtk::Entry = builder
         .get_object("username_entry")
@@ -481,34 +305,41 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("login_error_bar")
         .expect("Couldn't get login error bar");
     login_error_bar.set_revealed(false);
+    let login_error_bar = Rc::new(RefCell::new(login_error_bar));
 
-    login_error_bar.connect_close(|bar| {
+    login_error_bar.borrow().connect_close(|bar| {
         bar.set_revealed(false);
     });
-    login_error_bar.connect_response(|bar, response| {
+    login_error_bar.borrow().connect_response(|bar, response| {
         if response == gtk::ResponseType::Close {
             bar.set_revealed(false);
         }
     });
 
+    let attempting_login: gtk::Box = builder
+        .get_object("attempting_login")
+        .expect("couldn't get attempting_login (spinner)");
+
+    login_stack.read().unwrap().set_visible_child(&attempting_login);
+
     // let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
+    let search_combo_rc = Arc::new(RwLock::new(search_combo));
 
-    if *logged_in {
-        login_stack.set_visible_child(&ui_box);
-        search_combo.set_visible(true);
-    }
 
-    password_entry.connect_activate(|_| {
+    {   let login_button = login_button.clone();
+    password_entry.connect_activate(move |_| {
         let glade_src = include_str!("spotui.glade");
         let builder = Builder::from_string(glade_src);
-        let login_button: gtk::Button = builder
-            .get_object("login_button")
-            .expect("couldn't get login button");
-        login_button.emit("clicked", &[]);
-    });
+        login_button.borrow().emit("clicked", &[]);
+    })};
 
-    login_button.connect_clicked(move |_| {
-        login_error_bar.set_revealed(false);
+    {   let sc_rc_2 = search_combo_rc.clone();
+        let login_button = login_button.clone();
+        let login_stack = login_stack.clone();
+        let ui_box = ui_box.clone();
+        let login_error_bar = login_error_bar.clone();
+    login_button.clone().borrow().connect_clicked(move |_| {
+        login_error_bar.borrow().set_revealed(false);
         let username = String::from(username_entry.get_text());
         let password = String::from(password_entry.get_text());
         println!("re-trying credentials");
@@ -517,19 +348,19 @@ fn build_ui<'a>(application: &gtk::Application) {
             let new_things = SpotifyThings::new(credentials);
             if new_things.is_ok() {
                 *spotify_things.write().unwrap() = new_things;
-                login_stack.set_visible_child(&ui_box);
-                search_combo.set_visible(true);
+                login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
+                sc_rc_2.read().unwrap().set_visible(true);
             }
             else {
                 println!("failed to login with credentials");
-                login_error_bar.set_revealed(true);
+                login_error_bar.borrow().set_revealed(true);
             }
         } else {
             println!("credentials were not ok");
         }
         println!("done setting credentials");
         // drop(spotify_things);
-    });
+    })};
 
 
     search_box.connect_activate(move |sbox| {
@@ -573,7 +404,41 @@ fn build_ui<'a>(application: &gtk::Application) {
         //};
     });
 
+    let controls_revealer: gtk::Revealer = builder.get_object("controls_revealer")
+        .expect("failed to get controls_revealer");
+
+    controls_revealer.set_reveal_child(true);
+
     window.show_all();
+    //search_combo_rc.borrow().hide();
+    // search_revealer.hide();
+    // search_button.hide();
+
+    // attempt to log in
+    {   let sc_rc_2 = search_combo_rc.clone();
+        let login_stack = login_stack.clone();
+        let ui_box = ui_box.clone();
+        let login_error_bar = login_error_bar.clone();
+
+    let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+    thread::spawn( move || {
+        tx.send(*logged_in);
+    });
+    rx.attach(None, move |success| {
+        info!("login result received");
+        if success {
+            info!("login succeeded");
+            login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
+            sc_rc_2.read().unwrap().set_visible(true);
+        } else {
+            warn!("login failed");
+            login_stack.read().unwrap().set_visible_child(&(*login_ui.borrow()));
+            sc_rc_2.read().unwrap().set_visible(true);
+            login_error_bar.borrow().set_revealed(true);
+        }
+        glib::Continue(true)
+    });
+    }
 }
 
 fn sbox_stop_search<'a>(sbox: &'a gtk::SearchEntry, search_revealer: &'a Revealer) {
