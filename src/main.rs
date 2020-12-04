@@ -207,27 +207,7 @@ struct WindowComponents {
 }
 
 lazy_static! {
-    static ref startup_things: (Arc<RwLock<Result<SpotifyThings, &'static str>>>, bool) = {
-        let credentials = authentication::try_credentials();
-        let mut success = false;
-        let things = Arc::new(RwLock::new(
-        if credentials.is_ok() {
-            println!("credentials were ok");
-            if spotify::Spotify::test_credentials(credentials.clone().unwrap()) {
-                println!("tested credentials passed");
-                success = true;
-                SpotifyThings::new(credentials)
-            } else {
-                Err("couldn't log in with credentials")
-            }
-        } else {
-            Err("failed to read credentials")
-        }));
-        (things, success)
-    };
-    static ref spotify_things: Arc<RwLock<Result<SpotifyThings, &'static str>>> = startup_things.0.clone();
-    static ref logged_in: bool = startup_things.1;
-    static ref creds_changed: Arc<RwLock<bool>> = Arc::new(RwLock::new(false));
+    static ref spotify_things: Arc<RwLock<Result<SpotifyThings, &'static str>>> = Arc::new(RwLock::new(Err("no credentials yet")));
 }
 
 fn build_ui<'a>(application: &gtk::Application) {
