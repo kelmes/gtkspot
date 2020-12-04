@@ -227,6 +227,7 @@ lazy_static! {
     };
     static ref spotify_things: Arc<RwLock<Result<SpotifyThings, &'static str>>> = startup_things.0.clone();
     static ref logged_in: bool = startup_things.1;
+    static ref creds_changed: Arc<RwLock<bool>> = Arc::new(RwLock::new(false));
 }
 
 fn build_ui<'a>(application: &gtk::Application) {
@@ -295,12 +296,12 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("login_button")
         .expect("couldn't get login button")));
 
-    let username_entry: gtk::Entry = builder
+    let username_entry: Rc<RefCell<gtk::Entry>> = Rc::new(RefCell::new(builder
         .get_object("username_entry")
-        .expect("Couldn't get username_entry");
-    let password_entry: gtk::Entry = builder
+        .expect("Couldn't get username_entry")));
+    let password_entry: Rc<RefCell<gtk::Entry>> = Rc::new(RefCell::new(builder
         .get_object("password_entry")
-        .expect("Couldn't get password_entry");
+        .expect("Couldn't get password_entry")));
     let login_error_bar: gtk::InfoBar = builder
         .get_object("login_error_bar")
         .expect("Couldn't get login error bar");
@@ -316,49 +317,82 @@ fn build_ui<'a>(application: &gtk::Application) {
         }
     });
 
-    let attempting_login: gtk::Box = builder
+    let attempting_login: Rc<RefCell<gtk::Box>> = Rc::new(RefCell::new(builder
         .get_object("attempting_login")
-        .expect("couldn't get attempting_login (spinner)");
+        .expect("couldn't get attempting_login (spinner)")));
 
-    login_stack.read().unwrap().set_visible_child(&attempting_login);
+    login_stack.read().unwrap().set_visible_child(&(*attempting_login.borrow()));
 
     // let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
     let search_combo_rc = Arc::new(RwLock::new(search_combo));
 
+    //let clone_login_things = || {
+    //    let search_combo_rc = search_combo_rc.clone();
+    //    let login_button = login_button.clone();
+    //    let login_stack = login_stack.clone();
+    //    let ui_box = ui_box.clone();
+    //    let login_error_bar = login_error_bar.clone();
 
-    {   let login_button = login_button.clone();
-    password_entry.connect_activate(move |_| {
-        let glade_src = include_str!("spotui.glade");
-        let builder = Builder::from_string(glade_src);
-        login_button.borrow().emit("clicked", &[]);
+    //};
+
+    //let login = move || {
+    //    try_login(search_combo_rc, login_stack.clone(), ui_box.clone(),  
+    //                login_error_bar.clone(), login_ui.clone());
+    //};
+
+    let login_things = Login_Things {search_combo_rc,
+        login_stack, ui_box, login_error_bar, login_ui, attempting_login};
+
+    {   //clone_login_things();
+        //let search_combo_rc = search_combo_rc.clone();
+        //let login_stack = login_stack.clone();
+        //let ui_box = ui_box.clone();
+        //let login_error_bar = login_error_bar.clone();
+        //let search_combo_rc = search_combo_rc.clone();
+        //let login_ui = login_ui.clone();
+        let username_entry = username_entry.clone();
+        let login_things = login_things.clone();
+    password_entry.borrow().connect_activate(move |pw| {
+        let password = pw.get_text();
+        let username = username_entry.borrow().get_text();
+        // let glade_src = include_str!("spotui.glade");
+        // let builder = Builder::from_string(glade_src);
+        // login_button.borrow().emit("clicked", &[]);
+        //login();
+        try_login(login_things.clone(), Ok((username.to_string(), password.to_string())));
     })};
 
-    {   let sc_rc_2 = search_combo_rc.clone();
-        let login_button = login_button.clone();
-        let login_stack = login_stack.clone();
-        let ui_box = ui_box.clone();
-        let login_error_bar = login_error_bar.clone();
+    {   //let sc_rc_2 = search_combo_rc.clone();
+        //let login_button = login_button.clone();
+        //let login_stack = login_stack.clone();
+        //let ui_box = ui_box.clone();
+        //let login_error_bar = login_error_bar.clone();
+        let username_entry = username_entry.clone();
+        let login_things = login_things.clone();
     login_button.clone().borrow().connect_clicked(move |_| {
-        login_error_bar.borrow().set_revealed(false);
-        let username = String::from(username_entry.get_text());
-        let password = String::from(password_entry.get_text());
-        println!("re-trying credentials");
-        let credentials = authentication::create_credentials(username, password);
-        if credentials.is_ok() {
-            let new_things = SpotifyThings::new(credentials);
-            if new_things.is_ok() {
-                *spotify_things.write().unwrap() = new_things;
-                login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
-                sc_rc_2.read().unwrap().set_visible(true);
-            }
-            else {
-                println!("failed to login with credentials");
-                login_error_bar.borrow().set_revealed(true);
-            }
-        } else {
-            println!("credentials were not ok");
-        }
-        println!("done setting credentials");
+        let password = password_entry.borrow().get_text();
+        let username = username_entry.borrow().get_text();
+        try_login(login_things.clone(), Ok((username.to_string(), password.to_string())));
+        //login_error_bar.borrow().set_revealed(false);
+        //let username = String::from(username_entry.get_text());
+        //let password = String::from(password_entry.get_text());
+        //println!("re-trying credentials");
+        //let credentials = authentication::create_credentials(username, password);
+        //if credentials.is_ok() {
+        //    let new_things = SpotifyThings::new(credentials);
+        //    if new_things.is_ok() {
+        //        *spotify_things.write().unwrap() = new_things;
+        //        login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
+        //        sc_rc_2.read().unwrap().set_visible(true);
+        //    }
+        //    else {
+        //        println!("failed to login with credentials");
+        //        login_error_bar.borrow().set_revealed(true);
+        //    }
+        //} else {
+        //    println!("credentials were not ok");
+        //}
+        //println!("done setting credentials");
         // drop(spotify_things);
     })};
 
@@ -413,32 +447,77 @@ fn build_ui<'a>(application: &gtk::Application) {
     //search_combo_rc.borrow().hide();
     // search_revealer.hide();
     // search_button.hide();
-
+    try_login(login_things.clone(), Err("no credentials yet".to_string()));
     // attempt to log in
-    {   let sc_rc_2 = search_combo_rc.clone();
-        let login_stack = login_stack.clone();
-        let ui_box = ui_box.clone();
-        let login_error_bar = login_error_bar.clone();
+}
 
+#[derive(Clone)]
+struct Login_Things {
+    search_combo_rc: Arc<RwLock<gtk::Box>>,
+    login_stack: Arc<RwLock<gtk::Stack>>,
+    ui_box: Arc<RwLock<gtk::Box>>,
+    login_error_bar: Rc<RefCell<gtk::InfoBar>>,
+    login_ui: Rc<RefCell<gtk::Box>>,
+    attempting_login: Rc<RefCell<gtk::Box>>,
+}
+
+fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
+    let search_combo_rc = things.search_combo_rc;
+    let login_stack = things.login_stack;
+    let ui_box = things.ui_box;
+    let login_error_bar = things.login_error_bar;
+    let login_ui = things.login_ui;
+    let attempting_login = things.attempting_login;
+
+    let creds_supplied = auth.is_ok();
+    let (username, password) = 
+    if creds_supplied {
+        auth.unwrap()
+    } else { ("".to_string(), "".to_string())};
+
+    login_stack.read().unwrap().set_visible_child(&(*attempting_login.borrow()));
     let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
     thread::spawn( move || {
-        tx.send(*logged_in);
+        tx.send({
+            let credentials = 
+            if creds_supplied {
+                authentication::create_credentials(username, password)
+            } else {
+                authentication::try_credentials()
+            };
+            let mut success = false;
+            let things =
+            if credentials.is_ok() {
+                println!("credentials were ok");
+                if spotify::Spotify::test_credentials(credentials.clone().unwrap()) {
+                    println!("tested credentials passed");
+                    success = true;
+                    SpotifyThings::new(credentials)
+                } else {
+                    Err("couldn't log in with credentials")
+                }
+            } else {
+                Err("failed to read credentials")
+            };
+            // let tmp = (things, success)
+            *(spotify_things.clone().write().unwrap()) = things;
+            success
+        });
     });
     rx.attach(None, move |success| {
         info!("login result received");
         if success {
             info!("login succeeded");
             login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
-            sc_rc_2.read().unwrap().set_visible(true);
+            search_combo_rc.read().unwrap().set_visible(true);
         } else {
             warn!("login failed");
             login_stack.read().unwrap().set_visible_child(&(*login_ui.borrow()));
-            sc_rc_2.read().unwrap().set_visible(true);
+            search_combo_rc.read().unwrap().set_visible(true);
             login_error_bar.borrow().set_revealed(true);
         }
         glib::Continue(true)
     });
-    }
 }
 
 fn sbox_stop_search<'a>(sbox: &'a gtk::SearchEntry, search_revealer: &'a Revealer) {
