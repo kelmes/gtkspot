@@ -247,6 +247,9 @@ fn build_ui<'a>(application: &gtk::Application) {
     let search_button: gtk::Button = builder
         .get_object("search_button")
         .expect("Couldn't get search_button");
+    let play_pause_button: gtk::Button = builder
+        .get_object("play_pause_button")
+        .expect("couldn't get play_pause_button");
 
     let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
 
@@ -417,6 +420,22 @@ fn build_ui<'a>(application: &gtk::Application) {
         println!("volume is {}", spotify.volume());
         //};
     });
+
+    play_pause_button.connect_clicked(move |_| {
+        info!("play_pause clicked");
+        let spot_things_ref = spotify_things.clone();
+        let spot_things = spot_things_ref.read();
+        let things = spot_things.as_ref();
+        let things = match things {
+           Ok(x) => x,
+           Err(e) => { println!("not yet initialised"); return(); }
+        };
+        let spotify = things.as_ref().unwrap().spotify.clone();
+        info!("about to play/pause");
+        spotify.toggleplayback();
+        spotify.update_status();
+    });
+
 
     let controls_revealer: gtk::Revealer = builder.get_object("controls_revealer")
         .expect("failed to get controls_revealer");
