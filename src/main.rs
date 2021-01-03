@@ -7,6 +7,7 @@ use std::sync::{Mutex,RwLock};
 
 use gio::prelude::*;
 use gtk::prelude::*;
+use gtk::traits::*;
 use glib::clone;
 
 use gtk::SearchEntryExt;
@@ -150,30 +151,6 @@ impl SpotifyThings {
             spotify.clone(),
             cfg.use_nerdfont.unwrap_or(false),
         ));
-        {
-        let event_manager = event_manager.clone();
-        let spotify = spotify.clone();
-        std::thread::spawn(move || {
-            while true {
-                thread::sleep(std::time::Duration::from_millis(16));
-                for event in event_manager.msg_iter() {
-                    match event {
-                        Event::Player(state) => {
-                            trace!("event received: {:?}", state);
-                            spotify.update_status(state.clone());
-
-                            // #[cfg(feature = "mpris")]
-                            // mpris_manager.update();
-
-                            if state == PlayerEvent::FinishedTrack {
-                                // queue.next(false);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        }
         Ok(SpotifyThings{event_manager, spotify, queue, library})
     }
 }
@@ -230,6 +207,10 @@ struct WindowComponents {
     search_revealer: &'static Revealer,
 }
 
+thread_local!(
+    static GLOBAL: RefCell<Option<(EventManager, Arc<spotify::Spotify>, Arc<RwLock<gtk::Stack>>)>> = RefCell::new(None)
+);
+
 lazy_static! {
     static ref spotify_things: Arc<RwLock<Result<SpotifyThings, &'static str>>> = Arc::new(RwLock::new(Err("no credentials yet")));
 }
@@ -274,8 +255,18 @@ fn build_ui<'a>(application: &gtk::Application) {
     let play_pause_button: gtk::Button = builder
         .get_object("play_pause_button")
         .expect("couldn't get play_pause_button");
+    let play_pause_stack: gtk::Stack = builder
+        .get_object("play_pause_stack")
+        .expect("Couldn't get play_pause_revealer");
+    let pause_icon: Rc<RefCell<gtk::Image>> = Rc::new(RefCell::new(builder
+        .get_object("pause_icon")
+        .expect("Couldn't get pause_icon")));
+    let play_icon: Rc<RefCell<gtk::Image>> = Rc::new(RefCell::new(builder
+        .get_object("play_icon")
+        .expect("Couldn't get play_icon")));
 
     let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
+    let pp_stack_arc: Arc<RwLock<gtk::Stack>> = Arc::new(RwLock::new(play_pause_stack));
 
     let search_box: SearchEntry = builder
         .get_object("search_box")
@@ -348,7 +339,7 @@ fn build_ui<'a>(application: &gtk::Application) {
     //};
 
     let login_things = Login_Things {search_combo_rc,
-        login_stack, ui_box, login_error_bar, login_ui, attempting_login};
+        login_stack, ui_box, login_error_bar, login_ui, attempting_login, pp_stack_arc};
 
     {   //clone_login_things();
         //let search_combo_rc = search_combo_rc.clone();
@@ -481,6 +472,53 @@ struct Login_Things {
     login_error_bar: Rc<RefCell<gtk::InfoBar>>,
     login_ui: Rc<RefCell<gtk::Box>>,
     attempting_login: Rc<RefCell<gtk::Box>>,
+    pp_stack_arc: Arc<RwLock<gtk::Stack>>,
+
+}
+
+fn process_spotify_events() -> glib::Continue {
+
+    GLOBAL.with(|global| {
+    if let Some((ref event_manager, ref spotify, ref pp_stack_arc)) = *global.borrow() {
+        for event in event_manager.msg_iter() {
+            match event {
+                Event::Player(state) => {
+                    trace!("event received: {:?}", state);
+                    spotify.update_status(state.clone());
+
+                    match state {
+                        PlayerEvent::Playing => {
+                            let pp_stack = pp_stack_arc.read().unwrap();
+
+                        },
+                        PlayerEvent::Paused=> {
+
+                        },
+                        PlayerEvent::Stopped=> {
+
+                        },
+                        PlayerEvent::FinishedTrack=> {
+
+                        },
+
+                    }
+
+                    // #[cfg(feature = "mpris")]
+                    // mpris_manager.update();
+
+                    // if state == PlayerEvent::FinishedTrack {
+                        // queue.next(false);
+                    // }
+                }
+            }
+        }
+    }});
+    // hack for the moment to make sure we don't lose anything
+    thread::spawn(move || {
+        thread::sleep_ms(16);
+        glib::idle_add(process_spotify_events);
+    });
+    glib::Continue(false)
 }
 
 fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
@@ -490,6 +528,7 @@ fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
     let login_error_bar = things.login_error_bar;
     let login_ui = things.login_ui;
     let attempting_login = things.attempting_login;
+    let pp_stack_arc = things.pp_stack_arc;
 
     let creds_supplied = auth.is_ok();
     let (username, password) = 
@@ -499,6 +538,8 @@ fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
 
     login_stack.read().unwrap().set_visible_child(&(*attempting_login.borrow()));
     let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+
+    // login thread
     thread::spawn( move || {
         tx.send({
             let credentials = 
@@ -532,6 +573,23 @@ fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
             info!("login succeeded");
             login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
             search_combo_rc.read().unwrap().set_visible(true);
+            // start event loop
+            {
+            let spot_things_ref = spotify_things.clone();
+            let spot_things = spot_things_ref.read();
+            let things = spot_things.as_ref();
+            let things = match things {
+               Ok(x) => x,
+               Err(e) => { println!("not yet initialised"); panic!(); }
+            };
+            let spotify = things.as_ref().unwrap().spotify.clone();
+            let event_manager = things.as_ref().unwrap().event_manager.clone();
+            let pp_stack_arc = pp_stack_arc.clone();
+            GLOBAL.with(move |global| {
+                *global.borrow_mut() = Some((event_manager, spotify, pp_stack_arc))
+            });
+            glib::idle_add(process_spotify_events);
+            }
         } else {
             warn!("login failed");
             login_stack.read().unwrap().set_visible_child(&(*login_ui.borrow()));
