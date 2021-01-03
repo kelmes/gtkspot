@@ -393,7 +393,7 @@ fn build_ui<'a>(application: &gtk::Application) {
         // let results = search_track(&query, spotify_things.read().unwrap().spotify.clone());
         //let search_finished = async {
             for child in results_listbox.get_children() {
-              //results_listbox.remove(&child);
+                results_listbox.remove(&child);
             }
             //let results: Option<rspotify::model::search::SearchTracks> = search(&query).await;
             for (num, track) in results.iter().enumerate() {
@@ -401,17 +401,34 @@ fn build_ui<'a>(application: &gtk::Application) {
                 let new_entry = gtk::ListBoxRow::new();
                 let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
                 let entry = gtk::Label::new(Some(&track.title));
+                let play_button = gtk::Button::from_icon_name(Some("media-playback-start"), gtk::IconSize::Button);
+                {
+                    let spotify = spotify.clone();
+                    let track = track.clone();
+                    play_button.connect_clicked(move |_| {
+                        println!("attempting to play track: {}", &track);
+                        spotify.load(&track);
+                        { let spotify = spotify.clone();
+                            std::thread::spawn(move || {
+                                //TODO: find a neater way to tell when the track is loaded.
+                                thread::sleep(std::time::Duration::from_millis(1000));
+                                glib::idle_add(move || {spotify.play(); glib::Continue(false) });
+                            });
+                        }
+                    });
+                }
                 new_entry_box.add(&entry);
+                new_entry_box.add(&play_button);
                 new_entry.add(&new_entry_box);
                 new_entry.show_all();
                 results_listbox.add(&new_entry);
             }
-        let first_result = results.get(0);
-        println!("playing first track");
-        spotify.load(first_result.unwrap());
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-        spotify.play();
-        println!("volume is {}", spotify.volume());
+        // let first_result = results.get(0);
+        // println!("playing first track");
+        // spotify.load(first_result.unwrap());
+        // std::thread::sleep(std::time::Duration::from_millis(1000));
+        // spotify.play();
+        // println!("volume is {}", spotify.volume());
         //};
     });
 
