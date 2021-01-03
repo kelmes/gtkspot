@@ -433,7 +433,7 @@ fn build_ui<'a>(application: &gtk::Application) {
         let spotify = things.as_ref().unwrap().spotify.clone();
         info!("about to play/pause");
         spotify.toggleplayback();
-        spotify.update_status();
+        // spotify.update_status();
     });
 
 
