@@ -150,6 +150,30 @@ impl SpotifyThings {
             spotify.clone(),
             cfg.use_nerdfont.unwrap_or(false),
         ));
+        {
+        let event_manager = event_manager.clone();
+        let spotify = spotify.clone();
+        std::thread::spawn(move || {
+            while true {
+                thread::sleep(std::time::Duration::from_millis(16));
+                for event in event_manager.msg_iter() {
+                    match event {
+                        Event::Player(state) => {
+                            trace!("event received: {:?}", state);
+                            spotify.update_status(state.clone());
+
+                            // #[cfg(feature = "mpris")]
+                            // mpris_manager.update();
+
+                            if state == PlayerEvent::FinishedTrack {
+                                // queue.next(false);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        }
         Ok(SpotifyThings{event_manager, spotify, queue, library})
     }
 }
@@ -433,7 +457,6 @@ fn build_ui<'a>(application: &gtk::Application) {
         let spotify = things.as_ref().unwrap().spotify.clone();
         info!("about to play/pause");
         spotify.toggleplayback();
-        // spotify.update_status();
     });
 
 
