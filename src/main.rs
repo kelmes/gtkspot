@@ -164,40 +164,12 @@ fn search_track(query: &String, spotify: Arc<spotify::Spotify>) -> Vec<Track> {
             let mut t = results.tracks.items.iter().map(|ft| ft.into()).collect();
             let mut r = &mut found_tracks;
 
-            // if append {
-                r.append(&mut t);
-            // } else {
-                // *r = t;
-            // }
+            r.append(&mut t);
             results.tracks.total
         } else {
         0
         };
     println!("found {} tracks", found_track_count);
-    // let mut search_view = search::SearchView::new(
-        // event_manager.clone(),
-        // spotify.clone(),
-        // queue.clone(),
-        // library.clone(),
-    // );
-// 
-    // search_view.run_search(query);
-    println!("search run, printing results");
-
-    // for track in found_tracks {
-        // println!("{}", track);
-    // }
-    // let read_result_tracks = search_view.results_tracks.read();
-    // match read_result_tracks {
-    //     Ok(tracks) => {
-    //         for track in &*tracks {
-    //             println!("{}", track);
-    //         }
-    //     },
-    //     Err(x) => {
-    //     }
-    // };
-    println!("done printing results");
 
     found_tracks
 
@@ -242,7 +214,6 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("login_ui")
         .expect("couldn't get login_ui")));
     let ui_box: Arc<RwLock<gtk::Box>> = Arc::new(RwLock::new(builder
-    // let ui_box: Rc<gtk::Box> = Rc::new(builder
         .get_object("main_ui")
         .expect("couldn't get main_ui")));
 
@@ -298,9 +269,7 @@ fn build_ui<'a>(application: &gtk::Application) {
     let progress_bar: Rc<RefCell<gtk::ProgressBar>> = 
         Rc::new(RefCell::new(builder.get_object("progress_bar")
             .expect("couldn't get progress_bar")));
-    //let login_button: gtk::Button = builder
-    //    .get_object("login_button")
-    //    .expect("couldn't get login button");
+
     let login_button: Rc<RefCell<gtk::Button>> = Rc::new(RefCell::new(builder
         .get_object("login_button")
         .expect("couldn't get login button")));
@@ -359,27 +328,6 @@ fn build_ui<'a>(application: &gtk::Application) {
         let password = password_entry.borrow().get_text();
         let username = username_entry.borrow().get_text();
         try_login(login_things.clone(), ui_elements.clone(), Ok((username.to_string(), password.to_string())));
-        //login_error_bar.borrow().set_revealed(false);
-        //let username = String::from(username_entry.get_text());
-        //let password = String::from(password_entry.get_text());
-        //println!("re-trying credentials");
-        //let credentials = authentication::create_credentials(username, password);
-        //if credentials.is_ok() {
-        //    let new_things = SpotifyThings::new(credentials);
-        //    if new_things.is_ok() {
-        //        *spotify_things.write().unwrap() = new_things;
-        //        login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
-        //        sc_rc_2.read().unwrap().set_visible(true);
-        //    }
-        //    else {
-        //        println!("failed to login with credentials");
-        //        login_error_bar.borrow().set_revealed(true);
-        //    }
-        //} else {
-        //    println!("credentials were not ok");
-        //}
-        //println!("done setting credentials");
-        // drop(spotify_things);
     })};
 
     let playing_track_label: Rc<RefCell<gtk::Label>> = 
@@ -403,57 +351,45 @@ fn build_ui<'a>(application: &gtk::Application) {
         let query = String::from(sbox.get_text().as_str());
         let spotify = things.as_ref().unwrap().spotify.clone();
         let results = search_track(&query, spotify.clone());
-        // let results = search_track(&query, spotify_things.read().unwrap().spotify.clone());
-        //let search_finished = async {
-            for child in results_listbox.get_children() {
-                results_listbox.remove(&child);
-            }
-            //let results: Option<rspotify::model::search::SearchTracks> = search(&query).await;
-            for (num, track) in results.iter().enumerate() {
-                //let new_entry = &listbox_row_builder.build();
-                let new_entry = gtk::ListBoxRow::new();
-                let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
-                let entry = gtk::Label::new(Some(&track.title));
-                let play_button = gtk::Button::from_icon_name(Some("media-playback-start"), gtk::IconSize::Button);
-                {
-                    let spotify = spotify.clone();
-                    let track = track.clone();
-                    let track_name = track.title.to_string();
-                    let playing_track_label = playing_track_label.clone();
-                    play_button.connect_clicked(move |_| {
-                CURRENT_TRACK_LENGTH.with(|current_track_length| {
-                    *current_track_length.borrow_mut() = track.duration;
-                        println!("attempting to play track: {}", &track);
-                        spotify.load(&track);
-                        { let spotify = spotify.clone();
-                            playing_track_label.borrow().set_text(&track_name);
-                            std::thread::spawn(move || {
-                                //TODO: find a neater way to tell when the track is loaded.
-                                thread::sleep(std::time::Duration::from_millis(2000));
-                                glib::idle_add(move || {
-                                    spotify.update_track();
-                                    spotify.play();
-                                    // spotify.set_elapsed(time::Duration::from_millis(0));
-                                    glib::Continue(false)
-                                });
+        for child in results_listbox.get_children() {
+            results_listbox.remove(&child);
+        }
+        for (num, track) in results.iter().enumerate() {
+            let new_entry = gtk::ListBoxRow::new();
+            let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+            let entry = gtk::Label::new(Some(&track.title));
+            let play_button = gtk::Button::from_icon_name(Some("media-playback-start"), gtk::IconSize::Button);
+            {
+                let spotify = spotify.clone();
+                let track = track.clone();
+                let track_name = track.title.to_string();
+                let playing_track_label = playing_track_label.clone();
+                play_button.connect_clicked(move |_| {
+            CURRENT_TRACK_LENGTH.with(|current_track_length| {
+                *current_track_length.borrow_mut() = track.duration;
+                    println!("attempting to play track: {}", &track);
+                    spotify.load(&track);
+                    { let spotify = spotify.clone();
+                        playing_track_label.borrow().set_text(&track_name);
+                        std::thread::spawn(move || {
+                            //TODO: find a neater way to tell when the track is loaded.
+                            thread::sleep(std::time::Duration::from_millis(2000));
+                            glib::idle_add(move || {
+                                spotify.update_track();
+                                spotify.play();
+                                glib::Continue(false)
                             });
-                        }
-                    });
+                        });
+                    }
                 });
-                }
-                new_entry_box.add(&entry);
-                new_entry_box.add(&play_button);
-                new_entry.add(&new_entry_box);
-                new_entry.show_all();
-                results_listbox.add(&new_entry);
+            });
             }
-        // let first_result = results.get(0);
-        // println!("playing first track");
-        // spotify.load(first_result.unwrap());
-        // std::thread::sleep(std::time::Duration::from_millis(1000));
-        // spotify.play();
-        // println!("volume is {}", spotify.volume());
-        //};
+            new_entry_box.add(&entry);
+            new_entry_box.add(&play_button);
+            new_entry.add(&new_entry_box);
+            new_entry.show_all();
+            results_listbox.add(&new_entry);
+        }
     });
 
     play_pause_button.connect_clicked(move |_| {
@@ -477,11 +413,8 @@ fn build_ui<'a>(application: &gtk::Application) {
     controls_revealer.set_reveal_child(true);
 
     window.show_all();
-    //search_combo_rc.borrow().hide();
-    // search_revealer.hide();
-    // search_button.hide();
-    try_login(login_things.clone(), ui_elements.clone(), Err("no credentials yet".to_string()));
     // attempt to log in
+    try_login(login_things.clone(), ui_elements.clone(), Err("no credentials yet".to_string()));
 }
 
 #[derive(Clone)]
@@ -537,7 +470,6 @@ fn process_spotify_events() -> glib::Continue {
         if spotify.get_current_status() == PlayerEvent::Playing && *current_track_length.borrow() > 0 {
             let progress = spotify.get_current_progress();
             let elapsed_ms = (progress.as_secs() * 1000) as u32 + progress.subsec_millis() as u32;
-            println!("elapsed: {}, total: {}", elapsed_ms, *current_track_length.borrow());
             ui_elements.progress_bar.borrow_mut().set_fraction(elapsed_ms as f64 / *current_track_length.borrow() as f64);
         }
         });
@@ -651,7 +583,6 @@ fn setup_logger() -> Result<(), fern::InitError> {
         .apply()?;
     Ok(())
 }
-// static init: Init = Init { things: RefCell::new(Err("not initialised yet")) };
 fn main() {
     setup_logger();
     let application = gtk::Application::new(
@@ -661,7 +592,6 @@ fn main() {
     .expect("Initialization failed...");
 
     let credentials = authentication::try_credentials();
-    // init.re_init(credentials);
     application.connect_activate(|app| {
         build_ui(app);
     });

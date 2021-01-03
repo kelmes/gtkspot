@@ -16,29 +16,11 @@ pub fn try_credentials() -> Result<RespotCredentials, String> {
         Err(e) => {
             println!("error retrieving username: {}", e);
 
-            //let mut input = String::new();
-            //match io::stdin().read_line(&mut input) {
-            //    Ok(n) => {
-            //        println!("{} bytes read", n);
-            //        println!("{}", input);
-            //    }
-            //    Err(error) => println!("error: {}", error),
-            //}
-            //if input.ends_with("\n") {
-            //    input.pop();
-            //}
-            //println!("storing username in configstore");
-            //match config_store.set("username", input.clone()) {
-            //    Ok(x) => x,
-            //    Err(e) => {println!("error storing username {}", e);}
-            //};
-            //input
             return(Err("no username found".to_string()));
         },
     };
 
     let service = "com.github.kelmes.gtkspot";
-    //let username = "atheris84";
 
     let keyring = keyring::Keyring::new(&service, &username);
 
@@ -46,29 +28,9 @@ pub fn try_credentials() -> Result<RespotCredentials, String> {
         Ok(x) => x,
         Err(e) => {
             println!("error retrieving password: {}", e);
-            println!("adding new password from stdin");
-
-            //let mut input = String::new();
-            //match io::stdin().read_line(&mut input) {
-            //    Ok(n) => {
-            //        println!("{} bytes read", n);
-            //        println!("{}", input);
-            //    }
-            //    Err(error) => println!("error: {}", error),
-            //}
-            //if input.ends_with("\n") {
-            //    input.pop();
-            //}
-            //println!("storing password in keyring");
-            //match keyring.set_password(&input) {
-            //    Ok(x) => {},
-            //    Err(x) => {println!("error storing password: {}", x)},
-            //};
-            //input
             return(Err("no password found".to_string()));
         }
     };
-    println!("The password is '{}'", password);
 
     if username.len() == 0 {
         return Err("empty username".to_string());
@@ -100,39 +62,10 @@ pub fn create_credentials(username: String, password: String) -> Result<RespotCr
         Err(e) => {println!("error storing username {}", e);}
     };
 
-    // let credentials = match try_credentials() 
-    
-    // let username: String = match config_store.get("username") {
-    //     Ok(x) => x,
-    //     Err(e) => {
-    //         println!("error retrieving username: {}", e);
-    //         println!("storing username in configstore");
-    //         match config_store.set("username", username.clone()) {
-    //             Ok(x) => x,
-    //             Err(e) => {println!("error storing username {}", e);}
-    //         };
-    //         username.clone()
-    //     },
-    // };
-
     match keyring.set_password(&password) {
         Ok(x) => {},
         Err(x) => {println!("error storing password: {}", x)},
     };
-    //let password = match keyring.get_password() {
-    //    Ok(x) => x,
-    //    Err(e) => {
-    //        println!("error retrieving password: {}", e);
-
-    //        println!("storing password in keyring");
-    //        match keyring.set_password(&password) {
-    //            Ok(x) => {},
-    //            Err(x) => {println!("error storing password: {}", x)},
-    //        };
-    //        println!("using password {}", password);
-    //        password
-    //    }
-    //};
     let username = String::from(username);
     let auth_data = String::from(password).as_bytes().to_vec();
 
