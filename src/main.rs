@@ -373,6 +373,10 @@ fn build_ui<'a>(application: &gtk::Application) {
         // drop(spotify_things);
     })};
 
+    let playing_track_label: Rc<RefCell<gtk::Label>> = 
+        Rc::new(RefCell::new(builder.get_object("playing_track")
+            .expect("couldn't get playing_track_label")));
+
 
     search_box.connect_activate(move |sbox| {
         println!("searching");
@@ -405,10 +409,13 @@ fn build_ui<'a>(application: &gtk::Application) {
                 {
                     let spotify = spotify.clone();
                     let track = track.clone();
+                    let track_name = track.title.to_string();
+                    let playing_track_label = playing_track_label.clone();
                     play_button.connect_clicked(move |_| {
                         println!("attempting to play track: {}", &track);
                         spotify.load(&track);
                         { let spotify = spotify.clone();
+                            playing_track_label.borrow().set_text(&track_name);
                             std::thread::spawn(move || {
                                 //TODO: find a neater way to tell when the track is loaded.
                                 thread::sleep(std::time::Duration::from_millis(1000));

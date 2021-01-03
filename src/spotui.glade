@@ -256,11 +256,11 @@
               <placeholder/>
             </child>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="playing_track">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="valign">end</property>
-                <property name="label" translatable="yes">label_below
+                <property name="label" translatable="yes">[no track playing]
 </property>
               </object>
               <packing>
