@@ -429,7 +429,7 @@ fn build_ui<'a>(application: &gtk::Application) {
                             playing_track_label.borrow().set_text(&track_name);
                             std::thread::spawn(move || {
                                 //TODO: find a neater way to tell when the track is loaded.
-                                thread::sleep(std::time::Duration::from_millis(1500));
+                                thread::sleep(std::time::Duration::from_millis(2000));
                                 glib::idle_add(move || {
                                     spotify.update_track();
                                     spotify.play();
