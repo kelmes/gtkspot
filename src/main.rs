@@ -211,10 +211,12 @@ struct WindowComponents {
 struct UiElements {
     play_icon: Rc<RefCell<gtk::Image>>,
     pause_icon: Rc<RefCell<gtk::Image>>,
+    progress_bar: Rc<RefCell<gtk::ProgressBar>>,
 }
 
 thread_local!(
-    static GLOBAL: RefCell<Option<(EventManager, Arc<spotify::Spotify>, Arc<RwLock<gtk::Stack>>, UiElements)>> = RefCell::new(None)
+    static GLOBAL: RefCell<Option<(EventManager, Arc<spotify::Spotify>, Arc<RwLock<gtk::Stack>>, UiElements)>> = RefCell::new(None);
+    static CURRENT_TRACK_LENGTH: RefCell<u32> = RefCell::new(0);
 );
 
 lazy_static! {
@@ -293,6 +295,9 @@ fn build_ui<'a>(application: &gtk::Application) {
         });
     }
 
+    let progress_bar: Rc<RefCell<gtk::ProgressBar>> = 
+        Rc::new(RefCell::new(builder.get_object("progress_bar")
+            .expect("couldn't get progress_bar")));
     //let login_button: gtk::Button = builder
     //    .get_object("login_button")
     //    .expect("couldn't get login button");
@@ -332,7 +337,11 @@ fn build_ui<'a>(application: &gtk::Application) {
 
     let login_things = Login_Things {search_combo_rc,
         login_stack, ui_box, login_error_bar, login_ui, attempting_login, pp_stack_arc};
-    let ui_elements = UiElements {play_icon: play_icon.clone(), pause_icon: pause_icon.clone()};
+    let ui_elements = UiElements {
+        play_icon: play_icon.clone(),
+        pause_icon: pause_icon.clone(),
+        progress_bar: progress_bar.clone(),
+    };
 
     {   let username_entry = username_entry.clone();
         let login_things = login_things.clone();
@@ -412,17 +421,25 @@ fn build_ui<'a>(application: &gtk::Application) {
                     let track_name = track.title.to_string();
                     let playing_track_label = playing_track_label.clone();
                     play_button.connect_clicked(move |_| {
+                CURRENT_TRACK_LENGTH.with(|current_track_length| {
+                    *current_track_length.borrow_mut() = track.duration;
                         println!("attempting to play track: {}", &track);
                         spotify.load(&track);
                         { let spotify = spotify.clone();
                             playing_track_label.borrow().set_text(&track_name);
                             std::thread::spawn(move || {
                                 //TODO: find a neater way to tell when the track is loaded.
-                                thread::sleep(std::time::Duration::from_millis(1000));
-                                glib::idle_add(move || {spotify.play(); glib::Continue(false) });
+                                thread::sleep(std::time::Duration::from_millis(1500));
+                                glib::idle_add(move || {
+                                    spotify.update_track();
+                                    spotify.play();
+                                    // spotify.set_elapsed(time::Duration::from_millis(0));
+                                    glib::Continue(false)
+                                });
                             });
                         }
                     });
+                });
                 }
                 new_entry_box.add(&entry);
                 new_entry_box.add(&play_button);
@@ -483,6 +500,7 @@ fn process_spotify_events() -> glib::Continue {
 
     GLOBAL.with(|global| {
     if let Some((ref event_manager, ref spotify, ref pp_stack_arc, ref ui_elements)) = *global.borrow() {
+        // process events
         for event in event_manager.msg_iter() {
             match event {
                 Event::Player(state) => {
@@ -513,6 +531,16 @@ fn process_spotify_events() -> glib::Continue {
                 }
             }
         }
+
+        // update progress bar
+        CURRENT_TRACK_LENGTH.with(|current_track_length| {
+        if spotify.get_current_status() == PlayerEvent::Playing && *current_track_length.borrow() > 0 {
+            let progress = spotify.get_current_progress();
+            let elapsed_ms = (progress.as_secs() * 1000) as u32 + progress.subsec_millis() as u32;
+            println!("elapsed: {}, total: {}", elapsed_ms, *current_track_length.borrow());
+            ui_elements.progress_bar.borrow_mut().set_fraction(elapsed_ms as f64 / *current_track_length.borrow() as f64);
+        }
+        });
     }});
     // hack for the moment to make sure we don't lose anything
     thread::spawn(move || {
