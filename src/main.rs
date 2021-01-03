@@ -207,8 +207,14 @@ struct WindowComponents {
     search_revealer: &'static Revealer,
 }
 
+#[derive(Clone)]
+struct UiElements {
+    play_icon: Rc<RefCell<gtk::Image>>,
+    pause_icon: Rc<RefCell<gtk::Image>>,
+}
+
 thread_local!(
-    static GLOBAL: RefCell<Option<(EventManager, Arc<spotify::Spotify>, Arc<RwLock<gtk::Stack>>)>> = RefCell::new(None)
+    static GLOBAL: RefCell<Option<(EventManager, Arc<spotify::Spotify>, Arc<RwLock<gtk::Stack>>, UiElements)>> = RefCell::new(None)
 );
 
 lazy_static! {
@@ -321,56 +327,29 @@ fn build_ui<'a>(application: &gtk::Application) {
 
     login_stack.read().unwrap().set_visible_child(&(*attempting_login.borrow()));
 
-    // let spotify_things = Arc::new(Mutex::new(SpotifyThings::new(credentials)));
     let search_combo_rc = Arc::new(RwLock::new(search_combo));
 
-    //let clone_login_things = || {
-    //    let search_combo_rc = search_combo_rc.clone();
-    //    let login_button = login_button.clone();
-    //    let login_stack = login_stack.clone();
-    //    let ui_box = ui_box.clone();
-    //    let login_error_bar = login_error_bar.clone();
-
-    //};
-
-    //let login = move || {
-    //    try_login(search_combo_rc, login_stack.clone(), ui_box.clone(),  
-    //                login_error_bar.clone(), login_ui.clone());
-    //};
 
     let login_things = Login_Things {search_combo_rc,
         login_stack, ui_box, login_error_bar, login_ui, attempting_login, pp_stack_arc};
+    let ui_elements = UiElements {play_icon: play_icon.clone(), pause_icon: pause_icon.clone()};
 
-    {   //clone_login_things();
-        //let search_combo_rc = search_combo_rc.clone();
-        //let login_stack = login_stack.clone();
-        //let ui_box = ui_box.clone();
-        //let login_error_bar = login_error_bar.clone();
-        //let search_combo_rc = search_combo_rc.clone();
-        //let login_ui = login_ui.clone();
-        let username_entry = username_entry.clone();
+    {   let username_entry = username_entry.clone();
         let login_things = login_things.clone();
+        let ui_elements = ui_elements.clone();
     password_entry.borrow().connect_activate(move |pw| {
         let password = pw.get_text();
         let username = username_entry.borrow().get_text();
-        // let glade_src = include_str!("spotui.glade");
-        // let builder = Builder::from_string(glade_src);
-        // login_button.borrow().emit("clicked", &[]);
-        //login();
-        try_login(login_things.clone(), Ok((username.to_string(), password.to_string())));
+        try_login(login_things.clone(), ui_elements.clone(), Ok((username.to_string(), password.to_string())));
     })};
 
-    {   //let sc_rc_2 = search_combo_rc.clone();
-        //let login_button = login_button.clone();
-        //let login_stack = login_stack.clone();
-        //let ui_box = ui_box.clone();
-        //let login_error_bar = login_error_bar.clone();
-        let username_entry = username_entry.clone();
+    {   let username_entry = username_entry.clone();
         let login_things = login_things.clone();
+        let ui_elements = ui_elements.clone();
     login_button.clone().borrow().connect_clicked(move |_| {
         let password = password_entry.borrow().get_text();
         let username = username_entry.borrow().get_text();
-        try_login(login_things.clone(), Ok((username.to_string(), password.to_string())));
+        try_login(login_things.clone(), ui_elements.clone(), Ok((username.to_string(), password.to_string())));
         //login_error_bar.borrow().set_revealed(false);
         //let username = String::from(username_entry.get_text());
         //let password = String::from(password_entry.get_text());
@@ -460,7 +439,7 @@ fn build_ui<'a>(application: &gtk::Application) {
     //search_combo_rc.borrow().hide();
     // search_revealer.hide();
     // search_button.hide();
-    try_login(login_things.clone(), Err("no credentials yet".to_string()));
+    try_login(login_things.clone(), ui_elements.clone(), Err("no credentials yet".to_string()));
     // attempt to log in
 }
 
@@ -479,26 +458,24 @@ struct Login_Things {
 fn process_spotify_events() -> glib::Continue {
 
     GLOBAL.with(|global| {
-    if let Some((ref event_manager, ref spotify, ref pp_stack_arc)) = *global.borrow() {
+    if let Some((ref event_manager, ref spotify, ref pp_stack_arc, ref ui_elements)) = *global.borrow() {
         for event in event_manager.msg_iter() {
             match event {
                 Event::Player(state) => {
                     trace!("event received: {:?}", state);
                     spotify.update_status(state.clone());
 
+                    let pp_stack = pp_stack_arc.read().unwrap();
                     match state {
                         PlayerEvent::Playing => {
-                            let pp_stack = pp_stack_arc.read().unwrap();
-
+                            pp_stack.set_visible_child(&(*ui_elements.pause_icon.borrow()));
                         },
                         PlayerEvent::Paused=> {
-
+                            pp_stack.set_visible_child(&(*ui_elements.play_icon.borrow()));
                         },
                         PlayerEvent::Stopped=> {
-
                         },
                         PlayerEvent::FinishedTrack=> {
-
                         },
 
                     }
@@ -521,7 +498,7 @@ fn process_spotify_events() -> glib::Continue {
     glib::Continue(false)
 }
 
-fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
+fn try_login(things: Login_Things, ui_elements: UiElements, auth: Result<(String, String), String>) {
     let search_combo_rc = things.search_combo_rc;
     let login_stack = things.login_stack;
     let ui_box = things.ui_box;
@@ -585,8 +562,9 @@ fn try_login(things: Login_Things, auth: Result<(String, String), String>) {
             let spotify = things.as_ref().unwrap().spotify.clone();
             let event_manager = things.as_ref().unwrap().event_manager.clone();
             let pp_stack_arc = pp_stack_arc.clone();
+            let ui_elements = ui_elements.clone();
             GLOBAL.with(move |global| {
-                *global.borrow_mut() = Some((event_manager, spotify, pp_stack_arc))
+                *global.borrow_mut() = Some((event_manager, spotify, pp_stack_arc, ui_elements))
             });
             glib::idle_add(process_spotify_events);
             }
