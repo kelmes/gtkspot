@@ -199,9 +199,12 @@ fn build_ui<'a>(application: &gtk::Application) {
     let glade_src = include_str!("spotui.glade");
     let builder = Builder::from_string(glade_src);
 
-    let window: ApplicationWindow = builder.get_object("window1").expect("Couldn't get window1");
+    let window: libhandy::ApplicationWindow = builder.get_object("main_window").expect("Couldn't get window1");
     window.set_application(Some(application));
 
+    let headerbar: libhandy::HeaderBar = builder.get_object("headerbar").expect("couldn't get headerbar");
+
+    // window.set_titlebar(Some(&headerbar));
 
 
     let login_stack: Arc<RwLock<gtk::Stack>> = Arc::new(RwLock::new(builder
@@ -595,6 +598,9 @@ fn main() {
     application.connect_activate(|app| {
         build_ui(app);
     });
+
+    gtk::init();
+    libhandy::init();
 
     application.run(&args().collect::<Vec<_>>());
 }
