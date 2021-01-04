@@ -96,6 +96,7 @@ use crate::track::Track;
 use std::cell::Cell;
 
 use libhandy::SearchBarExt;
+use libhandy::CarouselExt;
 
 struct SpotifyThings {
     event_manager: EventManager,
@@ -252,6 +253,16 @@ fn build_ui<'a>(application: &gtk::Application) {
     let play_icon: Rc<RefCell<gtk::Image>> = Rc::new(RefCell::new(builder
         .get_object("play_icon")
         .expect("Couldn't get play_icon")));
+
+    let playing_carousel: Rc<RefCell<libhandy::Carousel>> = Rc::new(RefCell::new(builder
+        .get_object("playing_carousel")
+        .expect("couldn't get playing_carousel")));
+
+    let dummy_playing_label = gtk::Label::new(Some("nothing playing"));
+    let dummy_playing_label2 = gtk::Label::new(Some("nothing playing2"));
+
+    (*playing_carousel.borrow()).insert(&dummy_playing_label, -1);
+    (*playing_carousel.borrow()).insert(&dummy_playing_label2, -1);
 
     let header_controls_revealer: Rc<RefCell<gtk::Revealer>> = 
         Rc::new(RefCell::new(builder.get_object("header_controls_revealer").expect("couldn't get header_controls_revealer")));
