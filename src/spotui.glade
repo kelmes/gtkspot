@@ -6,12 +6,14 @@
   <object class="HdyApplicationWindow" id="main_window">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">GtkSpot</property>
+    <property name="default-width">1280</property>
+    <property name="default-height">720</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
-        <property name="baseline-position">bottom</property>
+        <property name="baseline-position">top</property>
         <child>
           <object class="HdyHeaderBar" id="headerbar">
             <property name="visible">True</property>
@@ -23,12 +25,12 @@
                 <property name="can-focus">False</property>
                 <child>
                   <object class="GtkToggleButton" id="search_button">
-                   <property name="active" bind-source="search_bar" bind-property="search-mode-enabled" bind-flags="sync-create|bidirectional"/>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
                     <property name="valign">center</property>
                     <property name="use-underline">True</property>
+                    <property name="active" bind-source="search_bar" bind-property="search-mode-enabled" bind-flags="bidirectional|sync-create">False</property>
                     <child>
                       <object class="GtkImage" id="search_image">
                         <property name="visible">True</property>
@@ -405,8 +407,9 @@
             </child>
           </object>
           <packing>
-            <property name="expand">False</property>
+            <property name="expand">True</property>
             <property name="fill">True</property>
+            <property name="pack-type">end</property>
             <property name="position">2</property>
           </packing>
         </child>
