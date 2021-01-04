@@ -259,6 +259,7 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("search_bar")
         .expect("Couldn't get search_bar");
 
+    search_bar.connect_entry(&search_entry);
 
     // {
         // let sr2 = sr.clone();
