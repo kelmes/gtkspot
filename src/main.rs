@@ -258,6 +258,19 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("playing_carousel")
         .expect("couldn't get playing_carousel")));
 
+    // templates don't work
+    // let template_recent: gtk::Bin = builder.get_object("template_recent").expect("couldn't get template_recent");
+
+    let recently_played_carousel: libhandy::Carousel = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
+    {
+        let new_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
+        let avatar = libhandy::Avatar::new(32, Some("test"), true);
+        new_box.pack_end(&avatar, true, true, 10);
+        recently_played_carousel.insert(&new_box, -1);
+    }
+
+    // recently_played_carousel.
+
     let dummy_playing_label = gtk::Label::new(Some("nothing playing"));
     let dummy_playing_label2 = gtk::Label::new(Some("nothing playing2"));
 
