@@ -186,6 +186,7 @@ struct UiElements {
     play_icon: Rc<RefCell<gtk::Image>>,
     pause_icon: Rc<RefCell<gtk::Image>>,
     progress_bar: Rc<RefCell<gtk::ProgressBar>>,
+    header_controls_revealer: Rc<RefCell<gtk::Revealer>>,
 }
 
 thread_local!(
@@ -252,6 +253,9 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("play_icon")
         .expect("Couldn't get play_icon")));
 
+    let header_controls_revealer: Rc<RefCell<gtk::Revealer>> = 
+        Rc::new(RefCell::new(builder.get_object("header_controls_revealer").expect("couldn't get header_controls_revealer")));
+
     // let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
     let pp_stack_arc: Arc<RwLock<gtk::Stack>> = Arc::new(RwLock::new(play_pause_stack));
 
@@ -312,6 +316,7 @@ fn build_ui<'a>(application: &gtk::Application) {
         play_icon: play_icon.clone(),
         pause_icon: pause_icon.clone(),
         progress_bar: progress_bar.clone(),
+        header_controls_revealer: header_controls_revealer.clone(),
     };
 
     {   let username_entry = username_entry.clone();
@@ -534,6 +539,7 @@ fn try_login(things: Login_Things, ui_elements: UiElements, auth: Result<(String
         info!("login result received");
         if success {
             info!("login succeeded");
+            &(*ui_elements.header_controls_revealer.borrow()).set_reveal_child(true);
             login_stack.read().unwrap().set_visible_child(&(*ui_box.read().unwrap()));
             search_combo_rc.read().unwrap().set_visible(true);
             // start event loop
