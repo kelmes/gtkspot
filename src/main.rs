@@ -95,6 +95,8 @@ use crate::track::Track;
 
 use std::cell::Cell;
 
+use libhandy::SearchBarExt;
+
 struct SpotifyThings {
     event_manager: EventManager,
     spotify: Arc<spotify::Spotify>,
@@ -224,16 +226,19 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("results_listbox")
         .expect("couldn't get results_listbox");
 
-    let search_revealer: Revealer = builder
-        .get_object("search_revealer")
-        .expect("Couldn't get search_revealer");
+    // let search_revealer: Revealer = builder
+        // .get_object("search_revealer")
+        // .expect("Couldn't get search_revealer");
         
     let search_combo: gtk::Box = builder
         .get_object("search_combo")
         .expect("Couldn't get search_combo");
-    let search_button: gtk::Button = builder
+    let search_button: gtk::ToggleButton = builder
         .get_object("search_button")
         .expect("Couldn't get search_button");
+    let search_entry: gtk::Entry = builder
+        .get_object("search_entry")
+        .expect("couldn't get search_entry");
     let play_pause_button: gtk::Button = builder
         .get_object("play_pause_button")
         .expect("couldn't get play_pause_button");
@@ -247,27 +252,20 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("play_icon")
         .expect("Couldn't get play_icon")));
 
-    let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
+    // let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
     let pp_stack_arc: Arc<RwLock<gtk::Stack>> = Arc::new(RwLock::new(play_pause_stack));
 
-    let search_box: SearchEntry = builder
-        .get_object("search_box")
-        .expect("Couldn't get search_box");
+    let search_bar: libhandy::SearchBar = builder
+        .get_object("search_bar")
+        .expect("Couldn't get search_bar");
 
 
-    {
-        let sr2 = sr.clone();
-        search_button.connect_clicked(move |_| {
-            sr2.borrow_mut().set_reveal_child(true);
-        });
-    }
-
-    {
-        let sr2 = sr.clone();
-        search_box.connect_stop_search(move |sbox: &SearchEntry| {
-            sr2.borrow_mut().set_reveal_child(false);
-        });
-    }
+    // {
+        // let sr2 = sr.clone();
+        // search_box.connect_stop_search(move |sbox: &SearchEntry| {
+            // sr2.borrow_mut().set_reveal_child(false);
+        // });
+    // }
 
     let progress_bar: Rc<RefCell<gtk::ProgressBar>> = 
         Rc::new(RefCell::new(builder.get_object("progress_bar")
@@ -338,7 +336,7 @@ fn build_ui<'a>(application: &gtk::Application) {
             .expect("couldn't get playing_track_label")));
 
 
-    search_box.connect_activate(move |sbox| {
+    search_entry.connect_activate(move |sbox| {
         println!("searching");
 
         let spot_things_ref = spotify_things.clone();
