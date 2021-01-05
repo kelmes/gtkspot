@@ -258,30 +258,37 @@ fn build_ui<'a>(application: &gtk::Application) {
         .get_object("playing_carousel")
         .expect("couldn't get playing_carousel")));
 
-    // templates don't work
-    // let template_recent: gtk::Bin = builder.get_object("template_recent").expect("couldn't get template_recent");
-
-    // let recently_played_carousel: libhandy::Carousel = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
     let recently_played_carousel: gtk::Box = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
     for sample_name in vec!["sample playlist 1", "playlist 2", "playlist 3", "playlist 4", "playlist 5"] {
-        // let sample_name = "Sample Playlist";
         let sample_label = gtk::Label::new(Some(&sample_name));
         let avatar = libhandy::Avatar::new(128, Some(&sample_name), true);
         let listbox = gtk::ListBox::new();
         let row = gtk::ListBoxRow::new();
         row.add(&avatar);
-        // let row2 = libhandy::ExpanderRow::new();
         let row2 = gtk::ListBoxRow::new();
         row2.add(&sample_label);
         listbox.add(&row);
         listbox.add(&row2);
         let context = listbox.get_style_context();
         context.add_class("content");
-        // recently_played_carousel.insert(&listbox, -1);
         recently_played_carousel.add(&listbox);
     }
 
-    // recently_played_carousel.
+    let daily_mix_carousel: gtk::Box = builder.get_object("daily_mix_carousel").expect("couldn't get daily_mix_carousel");
+    for sample_name in vec!["sample playlist 1", "playlist 2", "playlist 3", "playlist 4", "playlist 5"] {
+        let sample_label = gtk::Label::new(Some(&sample_name));
+        let avatar = libhandy::Avatar::new(128, Some(&sample_name), true);
+        let listbox = gtk::ListBox::new();
+        let row = gtk::ListBoxRow::new();
+        row.add(&avatar);
+        let row2 = gtk::ListBoxRow::new();
+        row2.add(&sample_label);
+        listbox.add(&row);
+        listbox.add(&row2);
+        let context = listbox.get_style_context();
+        context.add_class("content");
+        daily_mix_carousel.add(&listbox);
+    }
 
     let dummy_playing_label = gtk::Label::new(Some("nothing playing"));
     let dummy_playing_label2 = gtk::Label::new(Some("nothing playing2"));
