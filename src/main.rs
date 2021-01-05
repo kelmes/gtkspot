@@ -262,11 +262,21 @@ fn build_ui<'a>(application: &gtk::Application) {
     // let template_recent: gtk::Bin = builder.get_object("template_recent").expect("couldn't get template_recent");
 
     let recently_played_carousel: libhandy::Carousel = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
-    {
-        let new_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
-        let avatar = libhandy::Avatar::new(32, Some("test"), true);
-        new_box.pack_end(&avatar, true, true, 10);
-        recently_played_carousel.insert(&new_box, -1);
+    for sample_name in vec!["sample playlist 1", "playlist 2", "playlist 3", "playlist 4", "playlist 5"] {
+        // let sample_name = "Sample Playlist";
+        let sample_label = gtk::Label::new(Some(&sample_name));
+        let avatar = libhandy::Avatar::new(128, Some(&sample_name), true);
+        let listbox = gtk::ListBox::new();
+        let row = gtk::ListBoxRow::new();
+        row.add(&avatar);
+        // let row2 = libhandy::ExpanderRow::new();
+        let row2 = gtk::ListBoxRow::new();
+        row2.add(&sample_label);
+        listbox.add(&row);
+        listbox.add(&row2);
+        let context = listbox.get_style_context();
+        context.add_class("content");
+        recently_played_carousel.insert(&listbox, -1);
     }
 
     // recently_played_carousel.
