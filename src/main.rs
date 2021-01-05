@@ -261,7 +261,8 @@ fn build_ui<'a>(application: &gtk::Application) {
     // templates don't work
     // let template_recent: gtk::Bin = builder.get_object("template_recent").expect("couldn't get template_recent");
 
-    let recently_played_carousel: libhandy::Carousel = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
+    // let recently_played_carousel: libhandy::Carousel = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
+    let recently_played_carousel: gtk::Box = builder.get_object("recently_played_carousel").expect("couldn't get recently_played carousel");
     for sample_name in vec!["sample playlist 1", "playlist 2", "playlist 3", "playlist 4", "playlist 5"] {
         // let sample_name = "Sample Playlist";
         let sample_label = gtk::Label::new(Some(&sample_name));
@@ -276,7 +277,8 @@ fn build_ui<'a>(application: &gtk::Application) {
         listbox.add(&row2);
         let context = listbox.get_style_context();
         context.add_class("content");
-        recently_played_carousel.insert(&listbox, -1);
+        // recently_played_carousel.insert(&listbox, -1);
+        recently_played_carousel.add(&listbox);
     }
 
     // recently_played_carousel.
