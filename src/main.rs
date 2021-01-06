@@ -6,11 +6,13 @@ use std::rc::Rc;
 use std::sync::{Mutex,RwLock};
 
 use gio::prelude::*;
+use crate::gtk::prelude::ApplicationExt;
+use crate::gtk::prelude::ApplicationExtManual;
 use gtk::prelude::*;
 use gtk::traits::*;
 use glib::clone;
 
-use gtk::SearchEntryExt;
+//use gtk::SearchEntryExt;
 use gtk::{ApplicationWindow, Builder, Button, ListBox, Revealer, SearchEntry};
 
 use std::env;
@@ -95,8 +97,8 @@ use crate::track::Track;
 
 use std::cell::Cell;
 
-use libhandy::SearchBarExt;
-use libhandy::CarouselExt;
+//use libhandy::SearchBar;
+use libhandy::Carousel;
 
 struct SpotifyThings {
     event_manager: EventManager,
@@ -264,14 +266,14 @@ fn build_ui<'a>(application: &gtk::Application) {
         let avatar = libhandy::Avatar::new(128, Some(&sample_name), true);
         let listbox = gtk::ListBox::new();
         let row = gtk::ListBoxRow::new();
-        row.add(&avatar);
+        row.set_child(Some(&avatar));
         let row2 = gtk::ListBoxRow::new();
-        row2.add(&sample_label);
-        listbox.add(&row);
-        listbox.add(&row2);
+        row2.set_child(Some(&sample_label));
+        listbox.append(&row);
+        listbox.append(&row2);
         let context = listbox.get_style_context();
         context.add_class("content");
-        recently_played_carousel.add(&listbox);
+        recently_played_carousel.append(&listbox);
     }
 
     let daily_mix_carousel: gtk::Box = builder.get_object("daily_mix_carousel").expect("couldn't get daily_mix_carousel");
@@ -280,14 +282,14 @@ fn build_ui<'a>(application: &gtk::Application) {
         let avatar = libhandy::Avatar::new(128, Some(&sample_name), true);
         let listbox = gtk::ListBox::new();
         let row = gtk::ListBoxRow::new();
-        row.add(&avatar);
+        row.set_child(Some(&avatar));
         let row2 = gtk::ListBoxRow::new();
-        row2.add(&sample_label);
-        listbox.add(&row);
-        listbox.add(&row2);
+        row2.set_child(Some(&sample_label));
+        listbox.append(&row);
+        listbox.append(&row2);
         let context = listbox.get_style_context();
         context.add_class("content");
-        daily_mix_carousel.add(&listbox);
+        daily_mix_carousel.append(&listbox);
     }
 
     let dummy_playing_label = gtk::Label::new(Some("nothing playing"));
@@ -302,7 +304,7 @@ fn build_ui<'a>(application: &gtk::Application) {
     // let sr: Rc<RefCell<Revealer>> = Rc::new(RefCell::new(search_revealer));
     let pp_stack_arc: Arc<RwLock<gtk::Stack>> = Arc::new(RwLock::new(play_pause_stack));
 
-    let search_bar: libhandy::SearchBar = builder
+    let search_bar: gtk::SearchBar = builder
         .get_object("search_bar")
         .expect("Couldn't get search_bar");
 
@@ -366,8 +368,8 @@ fn build_ui<'a>(application: &gtk::Application) {
         let login_things = login_things.clone();
         let ui_elements = ui_elements.clone();
     password_entry.borrow().connect_activate(move |pw| {
-        let password = pw.get_text();
-        let username = username_entry.borrow().get_text();
+        let password = pw.get_text().expect("problem getting password text");
+        let username = username_entry.borrow().get_text().expect("problem getting username text");
         try_login(login_things.clone(), ui_elements.clone(), Ok((username.to_string(), password.to_string())));
     })};
 
@@ -375,8 +377,10 @@ fn build_ui<'a>(application: &gtk::Application) {
         let login_things = login_things.clone();
         let ui_elements = ui_elements.clone();
     login_button.clone().borrow().connect_clicked(move |_| {
-        let password = password_entry.borrow().get_text();
-        let username = username_entry.borrow().get_text();
+        let password = password_entry.borrow().get_text().expect("problem getting password text");
+;
+        let username = username_entry.borrow().get_text().expect("problem getting username text");
+;
         try_login(login_things.clone(), ui_elements.clone(), Ok((username.to_string(), password.to_string())));
     })};
 
@@ -398,17 +402,17 @@ fn build_ui<'a>(application: &gtk::Application) {
         let mut listbox_row_builder = gtk::ListBoxRowBuilder::new();
         listbox_row_builder = listbox_row_builder.activatable(true);
         println!("searching...");
-        let query = String::from(sbox.get_text().as_str());
+        let query = String::from(sbox.get_text().expect("couldn't get sbox text"));
         let spotify = things.as_ref().unwrap().spotify.clone();
         let results = search_track(&query, spotify.clone());
-        for child in results_listbox.get_children() {
-            results_listbox.remove(&child);
-        }
+        //for child in results_listbox.get_children() {
+        //    results_listbox.remove(&child);
+        //}
         for (num, track) in results.iter().enumerate() {
-            let new_entry = gtk::ListBoxRow::new();
+            //let new_entry = gtk::ListBoxRow::new();
             let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
             let entry = gtk::Label::new(Some(&track.title));
-            let play_button = gtk::Button::from_icon_name(Some("media-playback-start"), gtk::IconSize::Button);
+            let play_button = gtk::Button::from_icon_name(Some("media-playback-start"));
             {
                 let spotify = spotify.clone();
                 let track = track.clone();
@@ -434,11 +438,11 @@ fn build_ui<'a>(application: &gtk::Application) {
                 });
             });
             }
-            new_entry_box.add(&entry);
-            new_entry_box.add(&play_button);
-            new_entry.add(&new_entry_box);
-            new_entry.show_all();
-            results_listbox.add(&new_entry);
+            new_entry_box.append(&entry);
+            new_entry_box.append(&play_button);
+            //new_entry.append(&new_entry_box);
+            //new_entry.show();
+            results_listbox.append(&new_entry_box);
         }
     });
 
@@ -462,7 +466,7 @@ fn build_ui<'a>(application: &gtk::Application) {
 
     controls_revealer.set_reveal_child(true);
 
-    window.show_all();
+    window.show();
     // attempt to log in
     try_login(login_things.clone(), ui_elements.clone(), Err("no credentials yet".to_string()));
 }
@@ -634,6 +638,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
         .apply()?;
     Ok(())
 }
+
 fn main() {
     setup_logger();
     let application = gtk::Application::new(
@@ -651,4 +656,7 @@ fn main() {
     libhandy::init();
 
     application.run(&args().collect::<Vec<_>>());
+    //ApplicationExtManual::run(&application, &args);
+    //application::Application::run();
+
 }

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
 <interface>
-  <requires lib="gtk+" version="3.22"/>
+  <requires lib="gtk" version="4.0"/>
   <requires lib="libhandy" version="0.0"/>
   <object class="HdyApplicationWindow" id="main_window">
     <property name="can-focus">False</property>
@@ -10,39 +9,32 @@
     <property name="default-height">720</property>
     <child>
       <object class="GtkBox">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
+        <property name="can-focus">0</property>
         <property name="orientation">vertical</property>
         <property name="baseline-position">top</property>
         <child>
           <object class="HdyHeaderBar" id="headerbar">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="show-close-button">True</property>
             <child>
               <object class="GtkRevealer" id="header_controls_revealer">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="transition-type">none</property>
-                <child>
+                <property name="child">
                   <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <child>
                       <object class="GtkBox" id="search_combo">
-                        <property name="can-focus">False</property>
+                        <property name="visible">0</property>
+                        <property name="can-focus">0</property>
                         <child>
                           <object class="GtkToggleButton" id="search_button">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
                             <property name="valign">center</property>
-                            <property name="use-underline">True</property>
-                            <property name="active" bind-source="search_bar" bind-property="search-mode-enabled" bind-flags="bidirectional|sync-create">False</property>
+                            <property name="use-underline">1</property>
+                            <property name="active" bind-source="search_bar" bind-property="search-mode-enabled" bind-flags="bidirectional|sync-create"/>
                             <child>
                               <object class="GtkImage" id="search_image">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
+                                <property name="can-focus">0</property>
                                 <property name="icon-name">edit-find-symbolic</property>
                                 <property name="icon_size">1</property>
                               </object>
@@ -51,18 +43,8 @@
                               <class name="image-button"/>
                             </style>
                           </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
                         </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
                     </child>
                     <child>
                       <object class="HdyViewSwitcherTitle" id="view_switcher_title">
@@ -70,582 +52,399 @@
                         <property name="can-focus">False</property>
                         <property name="stack">main_view_stack</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
                     </child>
                   </object>
-                </child>
+                </property>
               </object>
             </child>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
         </child>
         <child>
           <object class="GtkOverlay" id="search_overlay">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <child>
+            <property name="vexpand">1</property>
+            <property name="can-focus">0</property>
+            <property name="child">
               <object class="GtkStack" id="login_stack">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="transition-type">crossfade</property>
                 <child>
-                  <object class="GtkBox" id="attempting_login">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="halign">center</property>
-                    <property name="valign">center</property>
-                    <property name="orientation">vertical</property>
-                    <child>
-                      <object class="GtkSpinner">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="active">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">Attempting to log in</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
+                  <object class="GtkStackPage">
                     <property name="name">page0</property>
                     <property name="title" translatable="yes">page1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox" id="login_ui">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="orientation">vertical</property>
-                    <child type="center">
-                      <!-- n-columns=4 n-rows=3 -->
-                      <object class="GtkGrid" id="login_form">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
+                    <property name="child">
+                      <object class="GtkBox" id="attempting_login">
+                        <property name="can-focus">0</property>
                         <property name="halign">center</property>
                         <property name="valign">center</property>
-                        <property name="row-spacing">20</property>
-                        <property name="column-spacing">20</property>
+                        <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkEntry" id="password_entry">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="visibility">False</property>
-                            <property name="invisible-char">●</property>
-                            <property name="input-purpose">password</property>
+                          <object class="GtkSpinner">
+                            <property name="can-focus">0</property>
                           </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkEntry" id="username_entry">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">0</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">password</property>
+                            <property name="can-focus">0</property>
+                            <property name="label" translatable="yes">Attempting to log in</property>
                           </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="login_button">
-                            <property name="label" translatable="yes">login</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">username</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkInfoBar" id="login_error_bar">
-                        <property name="name">login_error_bar</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="message-type">error</property>
-                        <property name="show-close-button">True</property>
-                        <child internal-child="action_area">
-                          <object class="GtkButtonBox">
-                            <property name="can-focus">False</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child internal-child="content_area">
-                          <object class="GtkBox">
-                            <property name="can-focus">False</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
+                    </property>
                   </object>
-                  <packing>
-                    <property name="name">page1</property>
-                    <property name="title" translatable="yes">page1</property>
-                    <property name="position">1</property>
-                  </packing>
                 </child>
                 <child>
-                  <object class="GtkBox" id="main_ui">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="orientation">vertical</property>
-                    <child>
-                      <object class="GtkStack" id="main_view_stack">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
+                  <object class="GtkStackPage">
+                    <property name="name">page1</property>
+                    <property name="title" translatable="yes">page1</property>
+                    <property name="child">
+                      <object class="GtkBox" id="login_ui">
+                        <property name="can-focus">0</property>
+                        <property name="orientation">vertical</property>
+                        <child type="center">
+                          <object class="GtkGrid" id="login_form">
+                            <property name="can-focus">0</property>
                             <property name="halign">center</property>
-                            <property name="orientation">vertical</property>
-                            <property name="homogeneous">True</property>
+                            <property name="valign">center</property>
+                            <property name="row-spacing">20</property>
+                            <property name="column-spacing">20</property>
                             <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="orientation">vertical</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Recently Played</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkScrolledWindow">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="shadow-type">in</property>
-                                    <property name="propagate-natural-width">True</property>
-                                    <property name="propagate-natural-height">True</property>
-                                    <child>
-                                      <object class="GtkViewport">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="hexpand">True</property>
-                                        <child>
-                                          <object class="GtkBox" id="recently_played_carousel">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="hexpand">True</property>
-                                            <property name="spacing">10</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
+                              <object class="GtkEntry" id="password_entry">
+                                <property name="visibility">0</property>
+                                <property name="invisible-char">●</property>
+                                <property name="input-purpose">password</property>
+                                <layout>
+                                  <property name="column">2</property>
+                                  <property name="row">1</property>
+                                </layout>
                               </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
                             </child>
                             <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="orientation">vertical</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Daily Mixes</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkScrolledWindow">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="shadow-type">in</property>
-                                    <property name="propagate-natural-width">True</property>
-                                    <property name="propagate-natural-height">True</property>
-                                    <child>
-                                      <object class="GtkViewport">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <child>
-                                          <object class="GtkBox" id="daily_mix_carousel">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="spacing">10</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
+                              <object class="GtkEntry" id="username_entry">
+                                <layout>
+                                  <property name="column">2</property>
+                                  <property name="row">0</property>
+                                </layout>
                               </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
                             </child>
-                          </object>
-                          <packing>
-                            <property name="name">Home</property>
-                            <property name="title" translatable="yes">Home</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Now Playing</property>
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">password</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">1</property>
+                                </layout>
                               </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
                             </child>
                             <child>
-                              <object class="HdyCarousel" id="playing_carousel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="spacing">100</property>
-                                <child>
-                                  <placeholder/>
-                                </child>
+                              <object class="GtkButton" id="login_button">
+                                <property name="label" translatable="yes">login</property>
+                                <property name="receives-default">1</property>
+                                <layout>
+                                  <property name="column">2</property>
+                                  <property name="row">2</property>
+                                </layout>
                               </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">username</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                           </object>
-                          <packing>
-                            <property name="name">Playing</property>
-                            <property name="title" translatable="yes">Now Playing</property>
-                            <property name="position">1</property>
-                          </packing>
                         </child>
                         <child>
-                          <object class="GtkScrolledWindow" id="search_view">
-                            <property name="name">test</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="shadow-type">in</property>
-                            <property name="propagate-natural-width">True</property>
-                            <property name="propagate-natural-height">True</property>
+                          <object class="GtkInfoBar" id="login_error_bar">
+                            <property name="name">login_error_bar</property>
+                            <property name="can-focus">0</property>
+                            <property name="message-type">error</property>
+                            <property name="show-close-button">1</property>
                             <child>
-                              <object class="GtkViewport">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="vscroll-policy">natural</property>
-                                <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">page2</property>
+                    <property name="title" translatable="yes">page2</property>
+                    <property name="child">
+                      <object class="GtkBox" id="main_ui">
+                        <property name="can-focus">0</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkStack" id="main_view_stack">
+                            <property name="vexpand">1</property>
+                            <property name="can-focus">0</property>
+                            <child>
+                              <object class="GtkStackPage">
+                                <property name="name">Home</property>
+                                <property name="title" translatable="yes">Home</property>
+                                <property name="child">
                                   <object class="GtkBox">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
+                                    <property name="can-focus">0</property>
+                                    <property name="halign">center</property>
+                                    <property name="orientation">vertical</property>
+                                    <property name="homogeneous">1</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="can-focus">0</property>
+                                        <property name="orientation">vertical</property>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="can-focus">0</property>
+                                            <property name="label" translatable="yes">Recently Played</property>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkScrolledWindow">
+                                            <property name="hexpand">1</property>
+                                            <property name="propagate-natural-width">1</property>
+                                            <property name="propagate-natural-height">1</property>
+                                            <property name="child">
+                                              <object class="GtkViewport">
+                                                <property name="can-focus">0</property>
+                                                <property name="hexpand">1</property>
+                                                <property name="child">
+                                                  <object class="GtkBox" id="recently_played_carousel">
+                                                    <property name="can-focus">0</property>
+                                                    <property name="hexpand">1</property>
+                                                    <property name="spacing">10</property>
+                                                    <child>
+                                                      <placeholder/>
+                                                    </child>
+                                                  </object>
+                                                </property>
+                                              </object>
+                                            </property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="can-focus">0</property>
+                                        <property name="orientation">vertical</property>
+                                        <child>
+                                          <object class="GtkLabel">
+                                            <property name="can-focus">0</property>
+                                            <property name="label" translatable="yes">Daily Mixes</property>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkScrolledWindow">
+                                            <property name="propagate-natural-width">1</property>
+                                            <property name="propagate-natural-height">1</property>
+                                            <property name="child">
+                                              <object class="GtkViewport">
+                                                <property name="can-focus">0</property>
+                                                <property name="child">
+                                                  <object class="GtkBox" id="daily_mix_carousel">
+                                                    <property name="can-focus">0</property>
+                                                    <property name="spacing">10</property>
+                                                    <child>
+                                                      <placeholder/>
+                                                    </child>
+                                                  </object>
+                                                </property>
+                                              </object>
+                                            </property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkStackPage">
+                                <property name="name">Playing</property>
+                                <property name="title" translatable="yes">Now Playing</property>
+                                <property name="child">
+                                  <object class="GtkBox">
+                                    <property name="can-focus">0</property>
                                     <property name="orientation">vertical</property>
                                     <child>
                                       <object class="GtkLabel">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">Search Results</property>
+                                        <property name="can-focus">0</property>
+                                        <property name="label" translatable="yes">Now Playing</property>
                                       </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
-                                      </packing>
                                     </child>
                                     <child>
-                                      <!-- n-columns=1 n-rows=1 -->
-                                      <object class="GtkGrid">
+                                      <object class="HdyCarousel" id="playing_carousel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
+                                        <property name="spacing">100</property>
                                         <child>
-                                          <object class="GtkListBox" id="results_listbox">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                          </object>
-                                          <packing>
-                                            <property name="left-attach">0</property>
-                                            <property name="top-attach">0</property>
-                                          </packing>
+                                          <placeholder/>
                                         </child>
                                       </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
-                                      </packing>
                                     </child>
                                   </object>
-                                </child>
+                                </property>
                               </object>
                             </child>
-                          </object>
-                          <packing>
-                            <property name="name">Search</property>
-                            <property name="title" translatable="yes">Search Results</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <object class="GtkLabel" id="playing_track">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="valign">end</property>
-                            <property name="label" translatable="yes">[no track playing]
-</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkRevealer" id="controls_revealer">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="transition-type">none</property>
-                            <property name="reveal-child">True</property>
                             <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="hexpand">True</property>
-                                <child>
-                                  <object class="GtkProgressBar" id="progress_bar">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
+                              <object class="GtkStackPage">
+                                <property name="name">Search</property>
+                                <property name="title" translatable="yes">Search Results</property>
+                                <property name="child">
+                                  <object class="GtkScrolledWindow" id="search_view">
+                                    <property name="name">test</property>
+                                    <property name="propagate-natural-width">1</property>
+                                    <property name="propagate-natural-height">1</property>
+                                    <property name="child">
+                                      <object class="GtkViewport">
+                                        <property name="can-focus">0</property>
+                                        <property name="vscroll-policy">natural</property>
+                                        <property name="child">
+                                          <object class="GtkBox">
+                                            <property name="can-focus">0</property>
+                                            <property name="orientation">vertical</property>
+                                            <child>
+                                              <object class="GtkLabel">
+                                                <property name="can-focus">0</property>
+                                                <property name="label" translatable="yes">Search Results</property>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="GtkGrid">
+                                                <property name="can-focus">0</property>
+                                                <child>
+                                                  <object class="GtkListBox" id="results_listbox">
+                                                    <property name="can-focus">0</property>
+                                                    <layout>
+                                                      <property name="column">0</property>
+                                                      <property name="row">0</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </property>
                                   </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkButton" id="play_pause_button">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">True</property>
-                                    <property name="image-position">right</property>
-                                    <property name="always-show-image">True</property>
+                                </property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="playing_track">
+                                <property name="can-focus">0</property>
+                                <property name="valign">end</property>
+                                <property name="label" translatable="yes">[no track playing]
+</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkRevealer" id="controls_revealer">
+                                <property name="can-focus">0</property>
+                                <property name="transition-type">none</property>
+                                <property name="reveal-child">1</property>
+                                <property name="child">
+                                  <object class="GtkBox">
+                                    <property name="can-focus">0</property>
+                                    <property name="hexpand">1</property>
                                     <child>
-                                      <object class="GtkStack" id="play_pause_stack">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
+                                      <object class="GtkProgressBar" id="progress_bar">
+                                        <property name="hexpand">1</property>
+                                        <property name="can-focus">0</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="play_pause_button">
+                                        <property name="receives-default">1</property>
                                         <child>
-                                          <object class="GtkImage" id="play_icon">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="icon-name">media-playback-start</property>
+                                          <object class="GtkStack" id="play_pause_stack">
+                                            <property name="can-focus">0</property>
+                                            <child>
+                                              <object class="GtkStackPage">
+                                                <property name="name">page0</property>
+                                                <property name="title" translatable="yes">page0</property>
+                                                <property name="child">
+                                                  <object class="GtkImage" id="play_icon">
+                                                    <property name="can-focus">0</property>
+                                                    <property name="icon-name">media-playback-start</property>
+                                                  </object>
+                                                </property>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="GtkStackPage">
+                                                <property name="name">page1</property>
+                                                <property name="title" translatable="yes">page1</property>
+                                                <property name="child">
+                                                  <object class="GtkImage" id="pause_icon">
+                                                    <property name="can-focus">0</property>
+                                                    <property name="icon-name">media-playback-pause</property>
+                                                  </object>
+                                                </property>
+                                              </object>
+                                            </child>
                                           </object>
-                                          <packing>
-                                            <property name="name">page0</property>
-                                            <property name="title" translatable="yes">page0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkImage" id="pause_icon">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="icon-name">media-playback-pause</property>
-                                          </object>
-                                          <packing>
-                                            <property name="name">page1</property>
-                                            <property name="title" translatable="yes">page1</property>
-                                            <property name="position">1</property>
-                                          </packing>
                                         </child>
                                       </object>
                                     </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="pack-type">end</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
+                                </property>
                               </object>
                             </child>
                           </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
+                        </child>
+                        <child>
+                          <object class="HdyViewSwitcherBar">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="stack">main_view_stack</property>
+                            <property name="reveal" bind-source="view_switcher_title" bind-property="title-visible" bind-flags="sync-create"/>
+                          </object>
                         </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="HdyViewSwitcherBar">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="stack">main_view_stack</property>
-                        <property name="reveal" bind-source="view_switcher_title" bind-property="title-visible" bind-flags="sync-create">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
+                    </property>
                   </object>
-                  <packing>
-                    <property name="name">page2</property>
-                    <property name="title" translatable="yes">page2</property>
-                    <property name="position">2</property>
-                  </packing>
                 </child>
               </object>
-              <packing>
-                <property name="index">-1</property>
-              </packing>
-            </child>
+            </property>
             <child type="overlay">
-              <object class="HdySearchBar" id="search_bar">
+              <object class="GtkSearchBar" id="search_bar">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="valign">start</property>
@@ -655,22 +454,13 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkEntry" id="search_entry">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                      </object>
+                      <object class="GtkEntry" id="search_entry"/>
                     </child>
                   </object>
                 </child>
               </object>
             </child>
           </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="pack-type">end</property>
-            <property name="position">2</property>
-          </packing>
         </child>
       </object>
     </child>
