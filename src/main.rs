@@ -384,10 +384,19 @@ fn build_ui<'a>(application: &gtk::Application) {
         Rc::new(RefCell::new(builder.get_object("playing_track")
             .expect("couldn't get playing_track_label")));
 
+    let main_view_stack: Rc<RefCell<gtk::Stack>> =
+        Rc::new(RefCell::new(builder.get_object("main_view_stack")
+            .expect("couldn't get main_view_stack")));
+
+    let search_view: Rc<RefCell<gtk::ScrolledWindow>> =
+        Rc::new(RefCell::new(builder.get_object("search_view")
+            .expect("couldn't get search_view")));
 
     search_entry.connect_activate(move |sbox| {
         println!("searching");
 
+        let search_view = search_view.clone();
+        let main_view_stack = main_view_stack.clone();
         let spot_things_ref = spotify_things.clone();
         let spot_things = spot_things_ref.read();
         let things = spot_things.as_ref();
@@ -397,16 +406,23 @@ fn build_ui<'a>(application: &gtk::Application) {
         };
         let mut listbox_row_builder = gtk::ListBoxRowBuilder::new();
         listbox_row_builder = listbox_row_builder.activatable(true);
+        listbox_row_builder = listbox_row_builder.halign(gtk::Align::Fill);
         println!("searching...");
         let query = String::from(sbox.get_text().as_str());
         let spotify = things.as_ref().unwrap().spotify.clone();
         let results = search_track(&query, spotify.clone());
+        let mut box_builder = gtk::BoxBuilder::new();
+        box_builder = box_builder.orientation(gtk::Orientation::Horizontal);
+        box_builder = box_builder.halign(gtk::Align::Fill);
+        box_builder = box_builder.expand(true);
         for child in results_listbox.get_children() {
             results_listbox.remove(&child);
         }
         for (num, track) in results.iter().enumerate() {
-            let new_entry = gtk::ListBoxRow::new();
-            let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+            // let new_entry = gtk::ListBoxRow::new();
+            let new_entry = listbox_row_builder.clone().expand(true).build();
+            // let new_entry_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+            let new_entry_box = box_builder.clone().halign(gtk::Align::Fill).expand(true).build();
             let entry = gtk::Label::new(Some(&track.title));
             let play_button = gtk::Button::from_icon_name(Some("media-playback-start"), gtk::IconSize::Button);
             {
@@ -434,13 +450,16 @@ fn build_ui<'a>(application: &gtk::Application) {
                 });
             });
             }
+            let clamp = libhandy::Clamp::new();
             new_entry_box.add(&entry);
             new_entry_box.add(&play_button);
-            new_entry.add(&new_entry_box);
+            clamp.add(&new_entry_box);
+            new_entry.add(&clamp);
             new_entry.show_all();
             results_listbox.add(&new_entry);
-            search_bar.set_search_mode(false);
         }
+        search_bar.set_search_mode(false);
+        main_view_stack.borrow().set_visible_child(&(*search_view.borrow()));
     });
 
     play_pause_button.connect_clicked(move |_| {
