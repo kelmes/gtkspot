@@ -439,6 +439,7 @@ fn build_ui<'a>(application: &gtk::Application) {
             new_entry.add(&new_entry_box);
             new_entry.show_all();
             results_listbox.add(&new_entry);
+            search_bar.set_search_mode(false);
         }
     });
 
