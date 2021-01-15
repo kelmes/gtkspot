@@ -200,7 +200,7 @@ lazy_static! {
 }
 
 fn build_ui<'a>(application: &gtk::Application) {
-    let glade_src = include_str!("spotui.glade");
+    let glade_src = include_str!("gtkspot.ui");
     let builder = Builder::from_string(glade_src);
 
     let window: libhandy::ApplicationWindow = builder.get_object("main_window").expect("Couldn't get window1");
